@@ -1,0 +1,23 @@
+{
+  "name": "test-analysis-agent",
+  "description": "面向 Markdown 需求文档的测试分析插件，基于测试理论、风险分析和项目记忆生成测试点分析报告，不生成测试用例。",
+  "version": "0.4.0",
+  "skills": "./skills/",
+  "agents": [
+    "./agents/orchestrator.md",
+    "./agents/requirement-analysis-agent.md",
+    "./agents/testpoint-generation-agent.md",
+    "./agents/coverage-review-agent.md"
+  ],
+  "author": {
+    "name": "Test Analysis Agent Team"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "testing",
+    "requirements",
+    "test-points",
+    "quality-analysis",
+    "memory"
+  ]
+}

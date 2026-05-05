@@ -1,0 +1,45 @@
+# Knowledge / Skills / Memory 边界说明
+
+## 一句话边界
+
+```text
+Knowledge = 稳定测试知识和标准
+Skills = 使用知识完成分析动作的流程
+Memory = 经确认的项目上下文和项目历史经验
+```
+
+## 归属规则
+
+| 内容类型 | 放置位置 | 原因 |
+|---|---|---|
+| 测试点定义、字段、类型、方法、级别 | `knowledge/testpoint-standard.md` | 稳定标准，所有 skill 共用 |
+| 风险优先、异常优先、状态优先等专家原则 | `knowledge/expert-rules.md` | 通用测试专家规则 |
+| 空值、重复提交、越权、幂等等通用缺陷模式 | `knowledge/defect-patterns.md` | 跨项目缺陷启发 |
+| 需求信号到测试方法的映射 | `knowledge/test-method-routing-matrix.md` | 稳定路由知识 |
+| Level 0 到 Level 4 的判定规则 | `knowledge/risk-level-rules.md` | 级别标准应全局一致 |
+| 方法分析证据字段和质量要求 | `knowledge/method-evidence-standard.md` | 证明测试理论被实际应用的统一标准 |
+| 某个测试方法的执行步骤 | `skills/*/SKILL.md` | 过程性动作，不是事实库 |
+| 输入、输出、约束、质量门禁调用顺序 | `skills/*/SKILL.md` | Agent 运行流程 |
+| 项目角色、业务术语、接口约定、输出偏好 | `memory/project-memory.md` | 项目专属且经确认 |
+| 项目真实历史缺陷、复盘教训、团队测试习惯 | `memory/testing-experience-memory.md` | 项目专属经验 |
+| 本次运行筛选出的少量上下文 | `memory/latest-context-pack.md` | 运行时注入，不是长期事实源 |
+
+## 禁止重复
+
+- `skills/` 不重复维护测试点类型、方法枚举、级别定义和通用缺陷模式，只引用 `knowledge/`。
+- `skills/` 不把方法证据写成自由发挥的叙述，统一引用 `knowledge/method-evidence-standard.md` 和 `templates/method-analysis-template.md`。
+- `memory/` 不保存通用测试理论、通用缺陷模式、通用级别定义和方法步骤。
+- `knowledge/` 不保存项目事实、用户临时偏好、单次运行结果和未确认假设。
+- `latest-context-pack.md` 只摘录与本次需求相关的 memory，不复制整份长期 memory。
+
+## 冲突处理
+
+当信息冲突时，按以下顺序处理：
+
+1. 当前用户明确指令。
+2. 当前需求文档中的明确规则。
+3. 经确认的项目 memory。
+4. `knowledge/` 中的通用测试知识。
+5. skill 的流程性默认动作。
+
+如果 memory 或 knowledge 与需求文档冲突，不直接覆盖需求；输出待确认问题。
