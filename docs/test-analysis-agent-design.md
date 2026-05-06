@@ -184,7 +184,7 @@ flowchart TD
   C4 --> G["测试点生成\ntestpoint-generation-agent"]
   G --> H["覆盖审查\ncoverage-review-agent"]
   H --> C5["CP-REVIEW\nclarification-gate"]
-  C1 --> Ask{"存在 mustAsk=是 的 Blocking 问题?"}
+  C1 --> Ask{"存在 P0/MustAsk 或 P1/ShouldAsk 问题?"}
   C2 --> Ask
   C3 --> Ask
   C4 --> Ask
@@ -224,7 +224,7 @@ sequenceDiagram
   O->>R: 分析需求结构和可测性
   R-->>O: 结构化需求模型 / 待确认问题 / 方法触发信号
   O->>C: CP-REQUIREMENT 去重、分级、限流候选问题
-  alt 存在 mustAsk=是 的 Blocking 问题
+  alt 存在 P0/MustAsk 或 P1/ShouldAsk 问题
     C-->>U: AskUserQuestion 交互提问
     U-->>C: 选择选项或自定义回答
     C-->>O: 澄清答案 / 待确认风险 / 会话产物
@@ -388,7 +388,7 @@ flowchart LR
 |---|---|---|
 | 记忆上下文包 | `memory-context-builder` | 注入本次相关的项目语境和测试经验 |
 | 结构化需求模型 | `requirement-testability` | 提取模块、规则、状态、接口、权限和待确认问题 |
-| 澄清候选队列 | 各阶段 skill | 记录不确定项、影响、阻塞级别和是否必须提问 |
+| 澄清候选队列 | 各阶段 skill | 记录不确定项、影响、阻塞级别、优先级和提问策略 |
 | 澄清会话产物 | `clarification-gate` | 记录 AskUserQuestion 问题队列、未触发原因、用户回答、已解决问题和刷新后的未解决待确认问题 |
 | 测试方法路由表 | `testing-method-router` | 决定每段需求使用哪些测试理论 |
 | 方法分析证据摘要 | 专项测试方法 skills | 证明测试理论被实际应用，并关联测试点或待确认问题 |

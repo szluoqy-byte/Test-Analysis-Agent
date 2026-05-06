@@ -134,7 +134,7 @@
 - 新增 `templates/clarification-template.md` 和 `outputs/clarifications/`，记录 AskUserQuestion 问题队列、用户回答和本次上下文补充。
 - 更新主入口 skill、编排 Agent、最终报告模板、质量门禁和检查脚本，使交互澄清成为正式流程环节。
 - `AskUserQuestion` 只在主会话中触发，不交给 subagent 内部处理；用户回答默认只作用于本次分析，不自动写入长期 memory。
-- 遵循非必要不触发原则：只有 `Blocking` 且 `mustAsk=是` 的问题才打断用户，其他问题进入待确认风险或报告摘要。
+- 调整交互策略为按优先级确认：`P0/MustAsk` 必问，`P1/ShouldAsk` 建议问，整次分析建议 5 到 10 个确认项。
 - 最终报告的“待确认问题”在交互澄清后刷新，只保留未解决问题，避免已回答问题重复出现在终稿中。
 - 新增 `.editorconfig` 和 `.gitattributes`，固定文本文件使用 UTF-8 与稳定换行，降低 Windows 环境下编码和换行漂移风险。
 
