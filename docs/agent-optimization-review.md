@@ -125,6 +125,16 @@
 - 更新示例报告，补齐方法分析证据摘要和新版章节顺序。
 - 更新设计文档，补充 Claude Code 插件兼容性、方法证据链、Knowledge / Skills / Memory 边界和产物流视图。
 
+## 第 13 轮 Memory 分片和交互澄清
+
+- 将 `memory/project-memory.md` 调整为项目 Memory 入口索引、全局高优先级规则和业务域索引。
+- 新增 `memory/domains/` 业务域分片目录，支持按业务域维护术语、角色权限、接口约定、数据约定和设计约束。
+- 更新 `memory-context-builder`，要求先读项目 Memory 索引，再按需求关键词选择相关业务域分片。
+- 新增 `skills/clarification-gate/SKILL.md`，在需求结构化后、测试方法路由前识别阻塞级待确认问题。
+- 新增 `templates/clarification-template.md` 和 `outputs/clarifications/`，记录 AskUserQuestion 问题队列、用户回答和本次上下文补充。
+- 更新主入口 skill、编排 Agent、最终报告模板、质量门禁和检查脚本，使交互澄清成为正式流程环节。
+- `AskUserQuestion` 只在主会话中触发，不交给 subagent 内部处理；用户回答默认只作用于本次分析，不自动写入长期 memory。
+
 ## 当前验收标准
 
 - 最终报告包含测试方法路由表。

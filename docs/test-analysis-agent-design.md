@@ -69,6 +69,7 @@ test-analysis-agent/
 │   ├── analyze-requirement-testpoints/
 │   ├── testing-method-router/
 │   ├── requirement-testability/
+│   ├── clarification-gate/
 │   ├── risk-based-test-analysis/
 │   ├── boundary-equivalence-analysis/
 │   ├── state-transition-analysis/
@@ -85,6 +86,8 @@ test-analysis-agent/
 ├── memory/
 │   ├── README.md
 │   ├── project-memory.md
+│   ├── domains/
+│   │   └── *.md
 │   ├── testing-experience-memory.md
 │   └── latest-context-pack.md
 ├── templates/
@@ -92,6 +95,7 @@ test-analysis-agent/
 ├── bin/
 ├── examples/
 └── outputs/
+    ├── clarifications/
     ├── test-points/
     └── testpoint-details/
 ```
@@ -159,7 +163,7 @@ bin = 对报告结构和非用例化约束做机械校验
 |---|---|---|---|
 | Knowledge | 通用测试理论、测试点标准、缺陷模式、方法路由矩阵、覆盖分类、专家评分标准 | 项目事实、临时偏好、单次运行结果、未确认业务规则 | `knowledge/testpoint-standard.md`、`knowledge/defect-patterns.md` |
 | Skills | 触发条件、输入、分析步骤、输出格式引用、质量检查顺序 | 长篇理论定义、通用缺陷清单、级别定义、项目事实 | `skills/testing-method-router/SKILL.md`、`skills/testpoint-generation/SKILL.md` |
-| Memory | 经人工确认的项目事实、项目术语、输出偏好、项目历史缺陷、项目反馈教训 | 通用测试理论、通用缺陷模式、方法步骤、未确认假设 | `memory/project-memory.md`、`memory/testing-experience-memory.md` |
+| Memory | 经人工确认的项目事实、项目术语、业务域约定、输出偏好、项目历史缺陷、项目反馈教训 | 通用测试理论、通用缺陷模式、方法步骤、未确认假设 | `memory/project-memory.md`、`memory/domains/*.md`、`memory/testing-experience-memory.md` |
 
 详细规则见 `docs/knowledge-skill-memory-boundaries.md`。
 
@@ -170,7 +174,12 @@ flowchart TD
   A["输入 Markdown 需求文档"] --> B["主入口 skill\nanalyze-requirement-testpoints"]
   B --> C["构建记忆上下文包\nmemory-context-builder"]
   C --> D["结构化需求分析\nrequirement-analysis-agent"]
-  D --> E["测试方法路由\ntesting-method-router"]
+  D --> CL["交互澄清闸门\nclarification-gate"]
+  CL --> Ask{"是否存在 Blocking 问题"}
+  Ask -- "是" --> AUQ["AskUserQuestion\n用户选择或自定义回答"]
+  AUQ --> CS["澄清会话产物\noutputs/clarifications"]
+  CS --> E["测试方法路由\ntesting-method-router"]
+  Ask -- "否" --> E
   E --> F["专项测试方法分析\n风险 / 边界 / 状态 / 决策表 / 权限 / 接口 / 数据 / 兼容"]
   F --> EV["方法分析证据\nME-*"]
   EV --> G["测试点生成\ntestpoint-generation-agent"]
@@ -193,6 +202,7 @@ sequenceDiagram
   participant O as 编排 Agent
   participant M as 记忆上下文 Skill
   participant R as 需求分析 Agent
+  participant C as 澄清闸门 Skill
   participant T as 方法路由 Skill
   participant G as 测试点生成 Agent
   participant Q as 覆盖审查 Agent
@@ -202,6 +212,14 @@ sequenceDiagram
   O->>M: 选择相关 memory 并生成上下文包
   O->>R: 分析需求结构和可测性
   R-->>O: 结构化需求模型 / 待确认问题 / 方法触发信号
+  O->>C: 识别阻塞级澄清问题
+  alt 存在 Blocking 问题
+    C-->>U: AskUserQuestion 交互提问
+    U-->>C: 选择选项或自定义回答
+    C-->>O: 澄清答案 / 待确认风险 / 会话产物
+  else 无 Blocking 问题
+    C-->>O: 无需交互澄清
+  end
   O->>T: 为需求片段选择测试理论方法
   T-->>O: 测试方法路由表 / 置信度
   O->>G: 生成测试点草稿
@@ -282,6 +300,8 @@ Memory 不保存：
 memory/
 ├── README.md
 ├── project-memory.md
+├── domains/
+│   └── *.md
 ├── testing-experience-memory.md
 └── latest-context-pack.md
 ```
@@ -289,7 +309,8 @@ memory/
 | 文件 | 作用 | 更新方式 |
 |---|---|---|
 | `README.md` | 说明 memory 的定义、边界和使用方法 | 随架构调整更新 |
-| `project-memory.md` | 保存项目事实、领域术语、角色权限、接口/数据约定和输出偏好 | 用户确认后人工追加 |
+| `project-memory.md` | 保存项目全局事实、全局约束、输出偏好和业务域索引 | 用户确认后人工追加 |
+| `domains/*.md` | 保存按业务域拆分的术语、角色权限、接口/数据约定和设计约束 | 用户确认后人工追加，并登记到 `project-memory.md` |
 | `testing-experience-memory.md` | 保存项目历史缺陷、项目风险模式、评审反馈和团队测试习惯 | 用户确认后人工追加 |
 | `latest-context-pack.md` | 本次运行前生成的轻量上下文包，可覆盖 | 每次运行刷新 |
 
@@ -297,7 +318,8 @@ memory/
 
 ```mermaid
 flowchart TD
-  Project["project-memory.md\n项目事实 / 术语 / 输出偏好"] --> Select["memory-context-builder\n筛选相关记忆"]
+  Project["project-memory.md\n全局事实 / 业务域索引 / 输出偏好"] --> Select["memory-context-builder\n筛选相关记忆"]
+  Domains["domains/*.md\n业务域术语 / 约定 / 约束"] --> Select
   Experience["testing-experience-memory.md\n历史缺陷 / 风险模式 / 反馈教训"] --> Select
   Requirement["当前需求文档\n标题 / 模块 / 关键词 / 业务对象"] --> Select
   Select --> Pack["latest-context-pack.md\n本次记忆上下文包"]
@@ -305,17 +327,20 @@ flowchart TD
   Analysis --> Proposal["建议沉淀的记忆更新"]
   Proposal --> Confirm{"用户是否确认"}
   Confirm -- "确认" --> Project
+  Confirm -- "确认" --> Domains
   Confirm -- "确认" --> Experience
   Confirm -- "未确认" --> NoWrite["不写入长期 memory"]
 ```
 
 ### 10.4 使用方法
 
-1. 运行开始时，根据需求标题、模块、角色、业务对象、状态、接口和关键词检索 `project-memory.md` 与 `testing-experience-memory.md`。
-2. 只摘取与本次需求直接相关的内容，刷新 `latest-context-pack.md`。
-3. 需求分析、方法路由、测试点生成和覆盖审查只读取 `latest-context-pack.md`，避免长期 memory 全量注入。
-4. 最终报告输出“建议沉淀的 Memory 更新”，说明建议写入哪个长期文件、依据是什么。
-5. 只有用户明确确认后，才把建议追加到 `project-memory.md` 或 `testing-experience-memory.md`。
+1. 运行开始时，先读取 `project-memory.md` 的全局内容和业务域索引。
+2. 根据需求标题、模块、角色、业务对象、状态、接口和关键词，选择相关 `domains/*.md` 分片。
+3. 同时检索 `testing-experience-memory.md` 中与本次需求相关的项目经验。
+4. 只摘取与本次需求直接相关的内容，刷新 `latest-context-pack.md`。
+5. 需求分析、方法路由、测试点生成和覆盖审查只读取 `latest-context-pack.md`，避免长期 memory 全量注入。
+6. 最终报告输出“建议沉淀的 Memory 更新”，说明建议写入哪个长期文件或业务域分片、依据是什么。
+7. 只有用户明确确认后，才把建议追加到 `project-memory.md`、`domains/*.md` 或 `testing-experience-memory.md`。
 
 ### 10.5 写入原则
 
@@ -349,6 +374,7 @@ flowchart LR
 |---|---|---|
 | 记忆上下文包 | `memory-context-builder` | 注入本次相关的项目语境和测试经验 |
 | 结构化需求模型 | `requirement-testability` | 提取模块、规则、状态、接口、权限和待确认问题 |
+| 澄清会话产物 | `clarification-gate` | 记录 AskUserQuestion 问题队列、用户回答和本次上下文补充 |
 | 测试方法路由表 | `testing-method-router` | 决定每段需求使用哪些测试理论 |
 | 方法分析证据摘要 | 专项测试方法 skills | 证明测试理论被实际应用，并关联测试点或待确认问题 |
 | 测试点明细 | `testpoint-generation` | 输出可评审测试点，并同时写入完整报告和独立明细文件 |
@@ -419,6 +445,7 @@ flowchart TD
 |---|---|
 | 主入口 | `analyze-requirement-testpoints` |
 | 需求理解 | `requirement-testability` |
+| 交互澄清 | `clarification-gate` |
 | 方法路由 | `testing-method-router` |
 | 风险分析 | `risk-based-test-analysis` |
 | 测试理论 | `boundary-equivalence-analysis`、`state-transition-analysis`、`decision-table-analysis`、`scenario-flow-analysis`、`permission-role-analysis`、`interface-contract-analysis`、`data-consistency-analysis`、`combinatorial-compatibility-analysis` |
@@ -447,6 +474,7 @@ flowchart TD
 | `requirement-model-template.md` | 结构化需求模型模板 |
 | `testpoint-output-template.md` | 独立测试点明细模板 |
 | `method-analysis-template.md` | 方法分析证据摘要模板 |
+| `clarification-template.md` | AskUserQuestion 澄清问题和会话产物模板 |
 | `coverage-review-template.md` | 覆盖审查模板 |
 | `memory-update-proposal-template.md` | Memory 更新建议模板 |
 | `final-report-template.md` | 最终报告模板 |
@@ -474,14 +502,15 @@ outputs/testpoint-details/<需求文件名>.testpoint-details.md
 ## 1. 分析范围
 ## 2. 记忆上下文包摘要
 ## 3. 需求结构化摘要
-## 4. 测试方法路由
-## 5. 方法分析证据摘要
-## 6. 待确认问题
-## 7. 测试点明细
-## 8. 覆盖审查结果
-## 9. 质量门禁结果
-## 10. 专家评审评分
-## 11. 建议沉淀的记忆更新
+## 4. 交互澄清摘要
+## 5. 测试方法路由
+## 6. 方法分析证据摘要
+## 7. 待确认问题
+## 8. 测试点明细
+## 9. 覆盖审查结果
+## 10. 质量门禁结果
+## 11. 专家评审评分
+## 12. 建议沉淀的记忆更新
 ```
 
 方法分析证据字段：

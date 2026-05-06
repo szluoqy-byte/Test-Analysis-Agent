@@ -8,6 +8,7 @@ skills:
   - analyze-requirement-testpoints
   - memory-context-builder
   - requirement-testability
+  - clarification-gate
   - testing-method-router
   - risk-based-test-analysis
   - boundary-equivalence-analysis
@@ -29,7 +30,7 @@ skills:
 ## 输入
 
 - 用户提供的需求文档路径。
-- 精简 memory Markdown 文件：`memory/project-memory.md`、`memory/testing-experience-memory.md`。
+- 精简 memory Markdown 文件：`memory/project-memory.md`、`memory/domains/*.md`、`memory/testing-experience-memory.md`。
 - 本插件中的 knowledge、template 和 quality gate 文件。
 
 ## 工作流
@@ -37,14 +38,17 @@ skills:
 1. 校验输入是单个 Markdown 需求文档。
 2. 使用 `memory-context-builder` 构建 `memory/latest-context-pack.md`。
 3. 在主会话编排下，让 `requirement-analysis-agent` 生成结构化需求模型和待确认问题。
-4. 运行 `testing-method-router` 生成测试方法路由表，包含必要性和置信度。
-5. 调用专项测试方法 skill，生成 `ME-*` 方法分析证据。
-6. 在主会话编排下，让 `testpoint-generation-agent` 基于结构化模型、方法路由、context pack 和方法证据生成测试点。
-7. 在主会话编排下，让 `coverage-review-agent` 执行质量门禁和专家评分。
-8. 如果质量门禁因输出质量失败，修正后重新审查；如果因需求信息缺失失败，保留失败项并生成“待确认问题”。
-9. 输出完整报告 `outputs/test-points/<需求文件名>.test-points.md`。
-10. 额外输出测试点明细文件 `outputs/testpoint-details/<需求文件名>.testpoint-details.md`。
-11. 输出 memory 更新建议，但未经用户确认不写入 memory 源文件。
+4. 在主会话中运行 `clarification-gate`，判断是否需要交互澄清。
+5. 如果存在 `Blocking` 问题，优先调用 Claude Code 的 `AskUserQuestion`；不要把交互澄清交给 subagent 内部处理。
+6. 将用户回答记录到 `outputs/clarifications/<需求文件名>.clarification-session.md`，并把已确认答案合并为本次运行上下文。
+7. 运行 `testing-method-router` 生成测试方法路由表，包含必要性和置信度。
+8. 调用专项测试方法 skill，生成 `ME-*` 方法分析证据。
+9. 在主会话编排下，让 `testpoint-generation-agent` 基于结构化模型、方法路由、context pack、澄清结果和方法证据生成测试点。
+10. 在主会话编排下，让 `coverage-review-agent` 执行质量门禁和专家评分。
+11. 如果质量门禁因输出质量失败，修正后重新审查；如果因需求信息缺失失败，保留失败项并生成“待确认问题”。
+12. 输出完整报告 `outputs/test-points/<需求文件名>.test-points.md`。
+13. 额外输出测试点明细文件 `outputs/testpoint-details/<需求文件名>.testpoint-details.md`。
+14. 输出 memory 更新建议，但未经用户确认不写入 memory 源文件。
 
 ## 非目标
 

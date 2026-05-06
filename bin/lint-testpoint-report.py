@@ -13,6 +13,22 @@ REQUIRED_SECTIONS = [
     "## 1. 分析范围",
     "## 2. 记忆上下文包摘要",
     "## 3. 需求结构化摘要",
+    "## 4. 交互澄清摘要",
+    "## 5. 测试方法路由",
+    "## 6. 方法分析证据摘要",
+    "## 7. 待确认问题",
+    "## 8. 测试点明细",
+    "## 9. 覆盖审查结果",
+    "## 10. 质量门禁结果",
+    "## 11. 专家评审评分",
+    "## 12. 建议沉淀的记忆更新",
+]
+
+LEGACY_REQUIRED_SECTIONS = [
+    "# ",
+    "## 1. 分析范围",
+    "## 2. 记忆上下文包摘要",
+    "## 3. 需求结构化摘要",
     "## 4. 测试方法路由",
     "## 5. 方法分析证据摘要",
     "## 6. 待确认问题",
@@ -114,7 +130,12 @@ def main() -> int:
     warnings: list[str] = []
 
     is_full_report = "## 1. 分析范围" in text
-    required_sections = REQUIRED_SECTIONS if is_full_report else DETAIL_REQUIRED_SECTIONS
+    required_sections = DETAIL_REQUIRED_SECTIONS
+    if is_full_report:
+        if "## 4. 交互澄清摘要" in text:
+            required_sections = REQUIRED_SECTIONS
+        else:
+            required_sections = LEGACY_REQUIRED_SECTIONS
 
     for section in required_sections:
         if section == "# ":

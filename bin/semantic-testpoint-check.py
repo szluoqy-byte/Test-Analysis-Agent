@@ -114,15 +114,20 @@ def main() -> int:
 
     if not testpoint_rows:
         errors.append("未找到测试点明细表")
-    if "## 4. 测试方法路由" in text and not route_rows:
+    has_route_section = "测试方法路由" in text
+    has_evidence_section = "方法分析证据摘要" in text
+    has_gate_section = "质量门禁结果" in text
+    has_score_section = "专家评审评分" in text
+
+    if has_route_section and not route_rows:
         errors.append("存在测试方法路由章节，但未找到路由表")
-    if "## 5. 方法分析证据摘要" not in text:
+    if not has_evidence_section:
         errors.append("缺少方法分析证据摘要章节")
-    if "## 5. 方法分析证据摘要" in text and not evidence_rows:
+    if has_evidence_section and not evidence_rows:
         errors.append("存在方法分析证据摘要章节，但未找到方法证据表")
-    if "## 9. 质量门禁结果" in text and not gate_rows:
+    if has_gate_section and not gate_rows:
         errors.append("存在质量门禁结果章节，但未找到质量门禁表")
-    if "## 10. 专家评审评分" in text and not score_rows:
+    if has_score_section and not score_rows:
         errors.append("存在专家评审评分章节，但未找到专家评分表")
 
     covered_methods: set[str] = set()
