@@ -173,18 +173,28 @@ bin = 对报告结构和非用例化约束做机械校验
 flowchart TD
   A["输入 Markdown 需求文档"] --> B["主入口 skill\nanalyze-requirement-testpoints"]
   B --> C["构建记忆上下文包\nmemory-context-builder"]
-  C --> D["结构化需求分析\nrequirement-analysis-agent"]
-  D --> CL["交互澄清闸门\nclarification-gate"]
-  CL --> Ask{"是否存在 Blocking 问题"}
+  C --> C1["CP-MEMORY\nclarification-gate"]
+  C1 --> D["结构化需求分析\nrequirement-analysis-agent"]
+  D --> C2["CP-REQUIREMENT\nclarification-gate"]
+  C2 --> E["测试方法路由\ntesting-method-router"]
+  E --> C3["CP-ROUTING\nclarification-gate"]
+  C3 --> F["专项测试方法分析\n风险 / 边界 / 状态 / 决策表 / 权限 / 接口 / 数据 / 兼容"]
+  F --> EV["方法分析证据\nME-*"]
+  EV --> C4["CP-METHOD\nclarification-gate"]
+  C4 --> G["测试点生成\ntestpoint-generation-agent"]
+  G --> H["覆盖审查\ncoverage-review-agent"]
+  H --> C5["CP-REVIEW\nclarification-gate"]
+  C1 --> Ask{"存在 mustAsk=是 的 Blocking 问题?"}
+  C2 --> Ask
+  C3 --> Ask
+  C4 --> Ask
+  C5 --> Ask
   Ask -- "是" --> AUQ["AskUserQuestion\n用户选择或自定义回答"]
   AUQ --> CS["澄清会话产物\noutputs/clarifications"]
-  CS --> E["测试方法路由\ntesting-method-router"]
-  Ask -- "否" --> E
-  E --> F["专项测试方法分析\n风险 / 边界 / 状态 / 决策表 / 权限 / 接口 / 数据 / 兼容"]
-  F --> EV["方法分析证据\nME-*"]
-  EV --> G["测试点生成\ntestpoint-generation-agent"]
-  G --> H["覆盖审查\ncoverage-review-agent"]
-  H --> I["质量门禁\ncoverage / traceability / method / risk / schema"]
+  CS --> Resume["合并本次上下文\n继续当前检查点后续流程"]
+  Ask -- "否" --> Risk["保留待确认风险\n继续分析"]
+  Risk --> Resume
+  C5 --> I["质量门禁\ncoverage / traceability / method / risk / schema"]
   I --> J["确定性检查\nlint / semantic"]
   J --> K{"是否通过"}
   K -- "通过" --> L["输出最终测试点分析报告"]
@@ -210,22 +220,26 @@ sequenceDiagram
 
   U->>O: 提供 Markdown 需求文档
   O->>M: 选择相关 memory 并生成上下文包
+  O->>C: CP-MEMORY 收集 memory 澄清候选
   O->>R: 分析需求结构和可测性
   R-->>O: 结构化需求模型 / 待确认问题 / 方法触发信号
-  O->>C: 识别阻塞级澄清问题
-  alt 存在 Blocking 问题
+  O->>C: CP-REQUIREMENT 去重、分级、限流候选问题
+  alt 存在 mustAsk=是 的 Blocking 问题
     C-->>U: AskUserQuestion 交互提问
     U-->>C: 选择选项或自定义回答
     C-->>O: 澄清答案 / 待确认风险 / 会话产物
-  else 无 Blocking 问题
-    C-->>O: 无需交互澄清
+  else 无必要交互
+    C-->>O: 记录未触发原因并继续
   end
   O->>T: 为需求片段选择测试理论方法
   T-->>O: 测试方法路由表 / 置信度
+  O->>C: CP-ROUTING 处理范围类候选，默认不打断
   O->>G: 生成测试点草稿
   G-->>O: 方法分析证据 / 测试点明细
+  O->>C: CP-METHOD 处理高风险方法缺口
   O->>Q: 执行覆盖审查和质量门禁
   Q-->>O: 审查结果 / 专家评分 / 修正建议
+  O->>C: CP-REVIEW 只处理阻断报告发布的问题
   O->>L: 执行结构和语义启发式校验
   L-->>O: 通过 / 失败
   O-->>U: 最终测试点分析报告
@@ -374,7 +388,8 @@ flowchart LR
 |---|---|---|
 | 记忆上下文包 | `memory-context-builder` | 注入本次相关的项目语境和测试经验 |
 | 结构化需求模型 | `requirement-testability` | 提取模块、规则、状态、接口、权限和待确认问题 |
-| 澄清会话产物 | `clarification-gate` | 记录 AskUserQuestion 问题队列、用户回答和本次上下文补充 |
+| 澄清候选队列 | 各阶段 skill | 记录不确定项、影响、阻塞级别和是否必须提问 |
+| 澄清会话产物 | `clarification-gate` | 记录 AskUserQuestion 问题队列、未触发原因、用户回答、已解决问题和刷新后的未解决待确认问题 |
 | 测试方法路由表 | `testing-method-router` | 决定每段需求使用哪些测试理论 |
 | 方法分析证据摘要 | 专项测试方法 skills | 证明测试理论被实际应用，并关联测试点或待确认问题 |
 | 测试点明细 | `testpoint-generation` | 输出可评审测试点，并同时写入完整报告和独立明细文件 |
@@ -512,6 +527,8 @@ outputs/testpoint-details/<需求文件名>.testpoint-details.md
 ## 11. 专家评审评分
 ## 12. 建议沉淀的记忆更新
 ```
+
+`待确认问题` 必须在所有交互澄清完成后刷新，只保留未解决问题、暂不确认风险和质量门禁仍无法关闭的需求缺口；已被用户回答、已被上下文覆盖或重复的问题不得出现在最终报告中。
 
 方法分析证据字段：
 

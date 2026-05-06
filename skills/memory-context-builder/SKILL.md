@@ -37,6 +37,7 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 - 已确认的项目测试经验。
 - 输出偏好。
 - 约束和非范围。
+- memory 澄清候选问题，仅限业务域命中冲突或 memory 与当前需求明显冲突的情况。
 
 ## 约束
 
@@ -45,3 +46,4 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 - 不把 `knowledge/` 中已有的通用测试理论复制进 context pack。
 - context pack 保持简洁、相关、有依据。
 - 未经用户明确确认，不更新 memory 源文件。
+- 本 skill 不直接触发 `AskUserQuestion`；只向 `clarification-gate` 提供候选。

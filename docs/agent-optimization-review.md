@@ -130,10 +130,13 @@
 - 将 `memory/project-memory.md` 调整为项目 Memory 入口索引、全局高优先级规则和业务域索引。
 - 新增 `memory/domains/` 业务域分片目录，支持按业务域维护术语、角色权限、接口约定、数据约定和设计约束。
 - 更新 `memory-context-builder`，要求先读项目 Memory 索引，再按需求关键词选择相关业务域分片。
-- 新增 `skills/clarification-gate/SKILL.md`，在需求结构化后、测试方法路由前识别阻塞级待确认问题。
+- 新增 `skills/clarification-gate/SKILL.md`，在多个检查点收集、去重、分级和限流澄清候选问题。
 - 新增 `templates/clarification-template.md` 和 `outputs/clarifications/`，记录 AskUserQuestion 问题队列、用户回答和本次上下文补充。
 - 更新主入口 skill、编排 Agent、最终报告模板、质量门禁和检查脚本，使交互澄清成为正式流程环节。
 - `AskUserQuestion` 只在主会话中触发，不交给 subagent 内部处理；用户回答默认只作用于本次分析，不自动写入长期 memory。
+- 遵循非必要不触发原则：只有 `Blocking` 且 `mustAsk=是` 的问题才打断用户，其他问题进入待确认风险或报告摘要。
+- 最终报告的“待确认问题”在交互澄清后刷新，只保留未解决问题，避免已回答问题重复出现在终稿中。
+- 新增 `.editorconfig` 和 `.gitattributes`，固定文本文件使用 UTF-8 与稳定换行，降低 Windows 环境下编码和换行漂移风险。
 
 ## 当前验收标准
 

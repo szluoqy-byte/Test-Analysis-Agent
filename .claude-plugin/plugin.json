@@ -1,7 +1,7 @@
 {
   "name": "test-analysis-agent",
   "description": "面向 Markdown 需求文档的测试分析插件，基于测试理论、风险分析和项目记忆生成测试点分析报告，不生成测试用例。",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "skills": "./skills/",
   "agents": [
     "./agents/orchestrator.md",

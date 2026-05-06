@@ -11,6 +11,8 @@ from pathlib import Path
 
 TESTPOINT_HEADER = "| ID | 模块 | 测试点 | 类型 | 方法 | 需求依据 | 级别 | 风险/备注 |"
 REQUIRED_FILES = [
+    ".editorconfig",
+    ".gitattributes",
     ".claude-plugin/plugin.json",
     "docs/test-analysis-agent-design.md",
     "docs/knowledge-skill-memory-boundaries.md",
