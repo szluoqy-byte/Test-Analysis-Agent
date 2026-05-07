@@ -52,7 +52,7 @@ flowchart LR
   Quality["质量门禁与 lint"] --> Plugin
 ```
 
-系统对外只暴露一个核心能力：基于需求文档生成测试点分析报告。系统内部通过 agent、skill、knowledge、memory、template 和 quality gate 共同完成专家分析。
+系统对外只暴露一个核心能力：基于需求文档生成测试点分析报告。稳定入口和流程真相是主 skill；agents 只作为可选协作角色，knowledge、memory、template 和 quality gate 为主流程提供支撑。
 
 ## 5. 目录结构视图
 
@@ -137,12 +137,14 @@ test-analysis-agent/
 
 ```mermaid
 flowchart TB
-  Entry["入口层\n主 skill / 用户命令"] --> AgentLayer["Agent 编排层\norchestrator / analysis / generation / review"]
-  AgentLayer --> SkillLayer["Skill 方法层\n测试理论与分析动作"]
+  Entry["入口层\n用户命令 / skill 调用"] --> MainSkill["主入口 skill\nanalyze-requirement-testpoints"]
+  Entry -.-> AgentLayer["可选 Agent 协作层\norchestrator / analysis / generation / review"]
+  AgentLayer -.-> MainSkill
+  MainSkill --> SkillLayer["Skill 方法层\n测试理论与分析动作"]
   SkillLayer --> KnowledgeLayer["Knowledge 专家知识层\n规则 / 缺陷 / 标准 / 覆盖体系"]
   SkillLayer --> MemoryLayer["Memory 记忆层\n项目事实 / 项目经验 / 输出偏好"]
   SkillLayer --> TemplateLayer["Template 模板层\n结构化模型 / 测试点 / 最终报告"]
-  AgentLayer --> QualityLayer["质量门禁层\n覆盖 / 追踪 / 方法 / 风险 / 结构"]
+  SkillLayer --> QualityLayer["质量门禁层\n覆盖 / 追踪 / 方法 / 风险 / 结构"]
   QualityLayer --> ScriptLayer["确定性校验\nlint / semantic / smoke"]
   ScriptLayer --> Output["最终测试点分析报告"]
 ```
@@ -150,8 +152,8 @@ flowchart TB
 ### 6.1 分层职责边界
 
 ```text
-Agent = 谁来做、按什么顺序做
-Skill = 怎么分析、何时触发某种测试理论
+Agent = 可选协作角色，不能维护另一套流程真相
+Skill = 主流程和分析动作，定义怎么分析、何时触发某种测试理论
 Knowledge = 使用哪些稳定测试知识、专家规则、缺陷模式和标准
 Memory = 当前项目和历史反馈中已经确认、且会影响本次分析的上下文
 Template = 中间产物和最终报告长什么样
@@ -159,13 +161,16 @@ Quality Gate = 输出是否达到测试专家评审标准
 bin = 对报告结构和非用例化约束做机械校验
 ```
 
-### 6.2 Knowledge / Skills / Memory 边界
+### 6.2 分层内容边界
 
 | 层 | 放什么 | 不放什么 | 典型文件 |
 |---|---|---|---|
-| Knowledge | 通用测试理论、测试点标准、缺陷模式、方法路由矩阵、覆盖分类、专家评分标准 | 项目事实、临时偏好、单次运行结果、未确认业务规则 | `knowledge/testpoint-standard.md`、`knowledge/defect-patterns.md` |
+| Knowledge | 通用测试理论、框架术语、测试点标准、缺陷模式、方法路由矩阵、覆盖分类、专家评分标准 | 项目事实、临时偏好、单次运行结果、未确认业务规则 | `knowledge/domain-glossary.md`、`knowledge/testpoint-standard.md`、`knowledge/defect-patterns.md` |
 | Skills | 触发条件、输入、分析步骤、输出格式引用、质量检查顺序 | 长篇理论定义、通用缺陷清单、级别定义、项目事实 | `skills/testing-method-router/SKILL.md`、`skills/testpoint-generation/SKILL.md` |
-| Memory | 经人工确认的项目事实、项目术语、业务域约定、输出偏好、项目历史缺陷、项目反馈教训 | 通用测试理论、通用缺陷模式、方法步骤、未确认假设 | `memory/project-memory.md`、`memory/domains/*.md`、`memory/testing-experience-memory.md` |
+| Memory | 经人工确认的项目事实、项目专属术语、业务域约定、输出偏好、项目历史缺陷、项目反馈教训 | 通用测试理论、框架术语、通用缺陷模式、方法步骤、未确认假设 | `memory/project-memory.md`、`memory/domains/*.md`、`memory/testing-experience-memory.md` |
+| Templates | Markdown 结构、字段占位、最小示例和产物布局 | 标准枚举的独立定义、项目事实、执行流程 | `templates/final-report-template.md`、`templates/testpoint-output-template.md` |
+| Quality Gates | 通过/失败条件、字段校验、结构校验和风险校验 | 新测试理论、新业务规则、另一套标准定义 | `quality-gates/output-schema-check.md`、`quality-gates/method-application-check.md` |
+| bin | 可机械执行的结构、语义和回归检查 | 不可解释的专家判断、项目事实、运行流程编排 | `bin/lint-testpoint-report.py`、`bin/semantic-testpoint-check.py` |
 
 详细规则见 `docs/knowledge-skill-memory-boundaries.md`。
 
@@ -173,78 +178,87 @@ bin = 对报告结构和非用例化约束做机械校验
 
 ```mermaid
 flowchart TD
-  A["输入 Markdown 需求文档"] --> B["主入口 skill\nanalyze-requirement-testpoints"]
+  A["输入 Markdown 需求文档"] --> PR["解析 PROJECT_ROOT\n创建 run 目录"]
+  PR --> B["主入口 skill\nanalyze-requirement-testpoints"]
   B --> C["构建记忆上下文包\nmemory-context-builder"]
   C --> C1["CP-MEMORY\nclarification-gate"]
-  C1 --> D["结构化需求分析\nrequirement-analysis-agent"]
+  C1 --> D["结构化需求分析\nrequirement-testability"]
   D --> C2["CP-REQUIREMENT\nclarification-gate"]
   C2 --> E["测试方法路由\ntesting-method-router"]
   E --> C3["CP-ROUTING\nclarification-gate"]
-  C3 --> F["专项测试方法分析\n风险 / 边界 / 状态 / 决策表 / 权限 / 接口 / 数据 / 兼容"]
+  C3 --> F["专项测试方法分析\n风险 / 边界 / 状态 / 决策表 / 权限 / 接口 / 数据 / 兼容 / 可观测性"]
   F --> EV["方法分析证据\nME-*"]
   EV --> C4["CP-METHOD\nclarification-gate"]
-  C4 --> G["测试点生成\ntestpoint-generation-agent"]
-  G --> H["覆盖审查\ncoverage-review-agent"]
+  C4 --> G["测试点生成\ntestpoint-generation"]
+  G --> H["覆盖审查 / 质量门禁 / 专家评分\ncoverage-review"]
   H --> C5["CP-REVIEW\nclarification-gate"]
-  C1 --> Ask{"存在 P0/MustAsk 或 P1/ShouldAsk 问题?"}
-  C2 --> Ask
-  C3 --> Ask
-  C4 --> Ask
-  C5 --> Ask
-  Ask -- "是" --> AUQ["AskUserQuestion\n用户选择或自定义回答"]
+  C1 -. 按需澄清 .-> AUQ["AskUserQuestion\n用户选择或自定义回答"]
+  C2 -.-> AUQ
+  C3 -.-> AUQ
+  C4 -.-> AUQ
+  C5 -.-> AUQ
   AUQ --> CS["澄清会话产物\n${PROJECT_ROOT}/outputs/runs/<run-id>"]
-  CS --> Resume["合并本次上下文\n继续当前检查点后续流程"]
-  Ask -- "否" --> Risk["保留待确认风险\n继续分析"]
-  Risk --> Resume
-  C5 --> I["质量门禁\ncoverage / traceability / method / risk / schema"]
-  I --> J["确定性检查\nlint / semantic"]
+  CS --> Resume["合并本次上下文\n返回触发它的检查点"]
+  C5 --> J["确定性检查\nlint / semantic"]
   J --> K{"是否通过"}
   K -- "通过" --> L["输出最终测试点分析报告"]
   K -- "输出质量问题" --> G
   K -- "需求信息缺失" --> M["保留待确认问题"]
   M --> L
+  L --> DTL["输出独立测试点明细文件"]
   L --> N["输出建议沉淀的记忆更新"]
 ```
 
-## 8. Agent 协作视图
+## 8. 主流程与可选 Agent 协作视图
+
+以下时序以主入口 skill 为准。Agent 可以参与阶段性工作，但必须服从主 skill 的检查点、产物路径、澄清规则和质量门禁。
 
 ```mermaid
 sequenceDiagram
   participant U as 用户
-  participant O as 编排 Agent
+  participant E as 主入口 Skill
+  participant O as 可选编排 Agent
   participant M as 记忆上下文 Skill
-  participant R as 需求分析 Agent
+  participant R as 需求结构化 Skill
   participant C as 澄清闸门 Skill
   participant T as 方法路由 Skill
-  participant G as 测试点生成 Agent
-  participant Q as 覆盖审查 Agent
+  participant S as 专项方法 Skills
+  participant G as 测试点生成 Skill
+  participant Q as 覆盖审查 Skill
   participant L as 校验脚本
 
-  U->>O: 提供 Markdown 需求文档
-  O->>M: 选择相关 memory 并生成上下文包
-  O->>C: CP-MEMORY 收集 memory 澄清候选
-  O->>R: 分析需求结构和可测性
-  R-->>O: 结构化需求模型 / 待确认问题 / 方法触发信号
-  O->>C: CP-REQUIREMENT 去重、分级、限流候选问题
+  U->>E: 提供 Markdown 需求文档
+  E->>E: 解析 PROJECT_ROOT / 创建 run 目录
+  opt 用户显式要求 agent 团队协作
+    E->>O: 委托阶段性协作，流程仍以主 skill 为准
+  end
+  E->>M: 选择相关 memory 并生成 context-pack
+  E->>C: CP-MEMORY 收集 memory 澄清候选
+  E->>R: 分析需求结构和可测性
+  R-->>E: 结构化需求模型 / 待确认问题 / 方法触发信号
+  E->>C: CP-REQUIREMENT 去重、分级、限流候选问题
+  Note over E,C: CP-MEMORY、CP-ROUTING、CP-METHOD、CP-REVIEW 也按同一澄清规则处理
   alt 存在 P0/MustAsk 或 P1/ShouldAsk 问题
     C-->>U: AskUserQuestion 交互提问
     U-->>C: 选择选项或自定义回答
-    C-->>O: 澄清答案 / 待确认风险 / 会话产物
+    C-->>E: 澄清答案 / 待确认风险 / 会话产物
   else 无必要交互
-    C-->>O: 记录未触发原因并继续
+    C-->>E: 记录未触发原因并继续
   end
-  O->>T: 为需求片段选择测试理论方法
-  T-->>O: 测试方法路由表 / 置信度
-  O->>C: CP-ROUTING 处理范围类候选，默认不打断
-  O->>G: 生成测试点草稿
-  G-->>O: 方法分析证据 / 测试点明细
-  O->>C: CP-METHOD 处理高风险方法缺口
-  O->>Q: 执行覆盖审查和质量门禁
-  Q-->>O: 审查结果 / 专家评分 / 修正建议
-  O->>C: CP-REVIEW 只处理阻断报告发布的问题
-  O->>L: 执行结构和语义启发式校验
-  L-->>O: 通过 / 失败
-  O-->>U: 最终测试点分析报告
+  E->>T: 为需求片段选择测试理论方法
+  T-->>E: 测试方法路由表 / 置信度 / 范围澄清候选
+  E->>C: CP-ROUTING 处理高优先范围类候选
+  E->>S: 调用必要专项方法并生成 ME-* 证据
+  S-->>E: 方法分析证据 / 方法缺口澄清候选
+  E->>C: CP-METHOD 处理高风险方法缺口
+  E->>G: 生成测试点明细
+  G-->>E: 测试点明细 / 待确认风险
+  E->>Q: 执行覆盖审查、质量门禁和专家评分
+  Q-->>E: 审查结果 / 专家评分 / 修正建议
+  E->>C: CP-REVIEW 只处理阻断报告发布的问题
+  E->>L: 执行结构和语义启发式校验
+  L-->>E: 通过 / 失败
+  E-->>U: 最终测试点分析报告 / 独立明细 / memory 更新建议
 ```
 
 ## 9. 测试方法路由架构视图
@@ -265,6 +279,7 @@ flowchart LR
   Router --> Interface["接口契约"]
   Router --> Data["数据一致性"]
   Router --> Combo["组合兼容"]
+  Router --> Observability["可观测性审计"]
 
   Risk --> Evidence["方法证据 ME-*"]
   Boundary --> Evidence
@@ -275,6 +290,7 @@ flowchart LR
   Interface --> Evidence
   Data --> Evidence
   Combo --> Evidence
+  Observability --> Evidence
   Evidence --> Points["测试点生成"]
 ```
 
@@ -290,6 +306,7 @@ flowchart LR
 | API、字段、响应、错误码、回调、外部系统 | 接口契约 | `interface-contract-analysis` | 必要性、置信度、说明 |
 | 库存、缓存、统计、导出、日志、异步同步 | 数据一致性 | `data-consistency-analysis` | 必要性、置信度、说明 |
 | 多平台、多版本、多配置、多渠道、feature flag | 组合兼容 | `combinatorial-compatibility-analysis` | 必要性、置信度、说明 |
+| 日志、审计、告警、人工恢复、运维可见性 | 可观测性审计 | `risk-based-test-analysis`、`testpoint-generation` | 必要性、置信度、说明 |
 | 资金、安全、不可逆、历史缺陷、高用户影响 | 风险驱动 | `risk-based-test-analysis` | 必要性、置信度、说明 |
 
 ## 10. Memory 设计
@@ -298,17 +315,18 @@ flowchart LR
 
 Memory 是 Agent 在多次需求分析之间保留的、经人工确认的项目上下文和测试经验。它用于让测试分析更贴近当前项目，而不是替代需求文档或专家知识库。
 
-Memory 只保存三类内容：
+长期 Memory 只保存两类内容：
 
-- 项目事实：业务模块、角色、术语、接口约定、数据对象、输出偏好。
+- 项目事实：业务模块、角色、项目专属术语、接口约定、数据对象、输出偏好。
 - 测试经验：项目历史缺陷、已确认风险模式、评审反馈、团队测试习惯。
-- 本次上下文包：每次运行前从长期 memory 中筛选出的少量相关内容。
+
+本次上下文包是从长期 memory 中筛选出的运行产物，写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`，不属于长期 Memory。
 
 Memory 不保存：
 
 - 通用测试理论和通用缺陷模式。稳定知识放在 `knowledge/`，分析动作放在 `skills/`。
 - 未确认的业务规则。未确认内容应放在“待确认问题”或“建议沉淀的 Memory 更新”。
-- 单次运行的完整中间产物。结构化需求模型、测试点草稿和审查结果归属 `outputs/`。
+- 单次运行的完整中间产物。context pack、澄清会话、结构化需求模型、测试点草稿和审查结果归属 `outputs/`。
 
 ### 10.2 Memory 文件结构
 
@@ -324,7 +342,7 @@ memory/
 | 文件 | 作用 | 更新方式 |
 |---|---|---|
 | `README.md` | 说明 memory 的定义、边界和使用方法 | 随架构调整更新 |
-| `project-memory.md` | 保存项目全局事实、全局约束和输出偏好 | 用户确认后人工追加 |
+| `project-memory.md` | 保存项目全局事实、全局约束、输出偏好和项目专属术语覆盖 | 用户确认后人工追加 |
 | `domains/*.md` | 保存用户自定义业务域的术语、角色权限、接口/数据约定和设计约束 | 用户确认后人工追加；新增分片自动扫描，无需登记索引 |
 | `testing-experience-memory.md` | 保存项目历史缺陷、项目风险模式、评审反馈和团队测试习惯 | 用户确认后人工追加 |
 
@@ -342,9 +360,9 @@ flowchart TD
   Pack --> Analysis["需求分析 / 方法路由 / 测试点生成"]
   Analysis --> Proposal["建议沉淀的记忆更新"]
   Proposal --> Confirm{"用户是否确认"}
-  Confirm -- "确认" --> Project
-  Confirm -- "确认" --> Domains
-  Confirm -- "确认" --> Experience
+  Confirm -- "确认项目事实/输出偏好" --> Project
+  Confirm -- "确认业务域事实" --> Domains
+  Confirm -- "确认测试经验" --> Experience
   Confirm -- "未确认" --> NoWrite["不写入长期 memory"]
 ```
 
@@ -380,7 +398,14 @@ flowchart LR
   G --> H["质量门禁结果"]
   H --> I["专家评审评分"]
   I --> J["最终测试点分析报告"]
-  I --> DTL["独立测试点明细文件"]
+  F --> DTL["独立测试点明细文件"]
+  B --> CQ["澄清候选队列"]
+  C --> CQ
+  D --> CQ
+  E --> CQ
+  G --> CQ
+  CQ --> CS["澄清会话产物"]
+  CS --> J
   J --> K["记忆更新建议"]
 ```
 
@@ -427,7 +452,7 @@ flowchart TD
   Draft --> Risk["风险级别检查"]
   Draft --> Schema["输出结构检查"]
 
-  NonCase --> Review["覆盖审查 Agent 汇总"]
+  NonCase --> Review["coverage-review 汇总"]
   EvidenceGate --> Review
   Coverage --> Review
   Trace --> Review
@@ -498,7 +523,7 @@ flowchart TD
 | `coverage-taxonomy.md` | 专家级覆盖分类 |
 | `test-oracle-heuristics.md` | 测试判定依据启发 |
 | `expert-review-rubric.md` | 专家评分标准 |
-| `domain-glossary.md` | 领域术语 |
+| `domain-glossary.md` | 框架与分析术语 |
 
 ### 13.4 Templates
 
@@ -576,6 +601,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md
 # <需求名称> 测试点明细
 
 - 输入文档：
+- 运行 ID：
 - 来源报告：
 - 生成时间：
 - 说明：本文件仅保存测试点明细，不包含覆盖审查、质量门禁、专家评分和记忆更新建议。

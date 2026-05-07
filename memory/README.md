@@ -6,8 +6,8 @@ Memory 是 Agent 在多次需求分析之间保留的、经人工确认的项目
 
 | 文件 | 定义 | 使用方式 |
 |---|---|---|
-| `project-memory.md` | 项目 Memory 全局项目事实、全局约束和输出偏好 | 作为项目语境入口 |
-| `domains/*.md` | 用户自定义业务域分片，保存项目事实、术语、角色权限、接口/数据约定和设计约束 | 自动扫描，按需注入 |
+| `project-memory.md` | 项目 Memory 全局项目事实、全局约束、输出偏好和项目专属术语覆盖 | 作为项目语境入口 |
+| `domains/*.md` | 用户自定义业务域分片，保存项目事实、业务术语、角色权限、接口/数据约定和设计约束 | 自动扫描，按需注入 |
 | `testing-experience-memory.md` | 项目历史缺陷、项目风险模式、评审反馈、团队测试习惯 | 作为项目测试经验来源 |
 
 运行时上下文包不保存在 `memory/` 下；每次分析先定位 `PROJECT_ROOT`，再写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
@@ -32,6 +32,7 @@ Memory 是 Agent 在多次需求分析之间保留的、经人工确认的项目
 
 - 写入 memory 的内容必须有证据，来源可以是需求文档、用户反馈、评审结论或真实缺陷复盘。
 - 通用测试理论、通用缺陷模式和通用级别定义不写入 memory，应放在 `knowledge/`。
+- 框架术语不写入 memory，应放在 `knowledge/domain-glossary.md`；memory 只记录项目专属术语或业务域术语覆盖。
 - 未确认的业务规则不写入 memory，应放在待确认问题。
 - 单次运行的完整中间产物不写入 memory，应保存在 `outputs/`。
 - 业务域分片不需要登记到 `project-memory.md`；新增 `.md` 文件后会被自动扫描，但只有相关片段会进入 context pack。

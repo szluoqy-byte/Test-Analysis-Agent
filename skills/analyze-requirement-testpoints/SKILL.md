@@ -11,6 +11,14 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 
 - `$ARGUMENTS`：一个 `.md` 需求文档路径。
 
+## 职责边界
+
+- 本 skill 只负责编排完整分析链路和写出本次运行产物。
+- 业务术语、设计约束和项目偏好来自 `memory-context-builder` 生成的上下文包，不在本 skill 内重复维护。
+- 通用测试理论、标准类型、标准方法、风险规则和专家审查规则来自 `knowledge/`。
+- 报告结构来自 `templates/`，质量判定来自 `quality-gates/` 和 `coverage-review`。
+- 专项分析 skill 只产出方法证据和测试点候选；最终测试点表由 `testpoint-generation` 统一合并。
+
 ## 项目根目录与输出路径
 
 在生成任何运行产物前，必须先解析 `PROJECT_ROOT`：
@@ -22,6 +30,8 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 5. 如果无法定位 `PROJECT_ROOT`，必须先向用户确认项目根目录，不得继续生成报告。
 
 所有运行产物必须写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/`。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件时必须使用基于 `PROJECT_ROOT` 的绝对路径。
+
+`run-id` 只在一次新的完整分析开始时生成一次。同一轮分析内的后续修正、澄清回答处理、质量门禁重跑和报告刷新，必须复用已经创建的运行目录。如果用户明确要求“继续上次结果修改”或提供了已有运行目录，优先复用该目录；只有用户要求重新分析或无法确认已有运行目录属于当前需求时，才创建新的 `run-id`。
 
 ## 执行流程
 
@@ -53,6 +63,17 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 17. 将最终报告写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md`。
 18. 将测试点明细表单独写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`，便于后续评审、导入表格或继续生成测试用例。
 
+## 阶段产物契约
+
+| 阶段 | 必须产出 | 交给下一阶段 |
+|---|---|---|
+| `memory-context-builder` | `context-pack.md`、memory 澄清候选 | 需求可测性、澄清闸门 |
+| `requirement-testability` | 结构化需求模型、可测性结论、需求澄清候选 | 方法路由、澄清闸门 |
+| `testing-method-router` | 方法路由表、方法范围澄清候选 | 专项方法 skill、测试点生成 |
+| 专项方法 skill | `ME-*` 方法证据、测试点候选、方法缺口候选 | 测试点生成、澄清闸门 |
+| `testpoint-generation` | 标准测试点表、独立明细表内容、待确认风险点 | 覆盖审查 |
+| `coverage-review` | 门禁结果、专家评分、阻断项和修正建议 | 最终报告刷新 |
+
 ## 输出要求
 
 - 使用 `templates/final-report-template.md`。
@@ -79,3 +100,4 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 - 复杂需求的整次分析目标是累计 5 到 10 个确认项；简单需求可以少问或不问，但必须在澄清会话产物中说明原因。
 - 用户对澄清问题的回答默认只作用于本次分析。
 - 未经用户明确确认，不写入 memory 源文件。
+- 不把中间候选表直接当作最终测试点输出；最终测试点必须经过 `testpoint-generation` 合并和 `coverage-review` 审查。

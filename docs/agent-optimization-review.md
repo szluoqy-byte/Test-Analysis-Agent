@@ -142,6 +142,11 @@
 - 新增 `PROJECT_ROOT` 解析和输出路径硬约束，避免 Claude Code 以 skill 工作目录为基准时把 `outputs/runs` 写入 skill 或插件缓存目录。
 - 收紧 `clarification-gate` 触发规则：`P0/MustAsk` 必问、`P1/ShouldAsk` 应问，`CP-REQUIREMENT` 后存在重要候选但未触发时必须记录明确原因。
 - 删除 `memory/domains/test-analysis-agent.md` 框架自身分片，`domains/` 仅作为用户自定义业务域扩展区；业务域分片改为自动扫描匹配，不再要求维护 `project-memory.md` 索引。
+- 统一设计文档主链路：主入口 skill 是流程真相，agents 仅为可选协作；Memory 与运行产物分离，context pack 不再被描述为长期 Memory。
+- 细化分层边界：框架术语归属 `knowledge/domain-glossary.md`，Memory 只保留项目事实、项目专属术语覆盖和输出偏好；Template、Quality Gate、bin 只引用或校验权威标准，不维护另一套定义。
+- 修正设计文档视图：数据产物流中独立明细改由测试点明细派生，补充澄清候选/会话产物流；方法路由视图补齐可观测性审计。
+- 细化 Knowledge 层内容：补强测试点类型/方法选择规则、方法证据最低颗粒度、覆盖分类判定表、缺陷模式、风险评分启发、Oracle 强度、专家审视顺序和评分细则。
+- 细化 Skill 层内容：补强主入口阶段契约、run-id 复用规则、澄清候选排序与降级、memory 自动扫描裁剪、需求模型输出字段、方法路由判定、专项方法证据/澄清候选输出、测试点合并规则和覆盖审查失败处理。
 
 ## 当前验收标准
 
