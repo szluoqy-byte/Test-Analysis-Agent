@@ -12,7 +12,7 @@ description: 当需求描述 API、前后端交互、外部系统、回调、请
 - 接口相关需求片段。
 - 结构化需求模型。
 - `knowledge/defect-patterns.md`。
-- `memory/latest-context-pack.md`。
+- `outputs/runs/<run-id>/context-pack.md`。
 
 ## 分析步骤
 

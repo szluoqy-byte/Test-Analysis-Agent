@@ -15,7 +15,7 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 
 1. 校验输入必须是单个 Markdown 文件。
 2. 生成本次运行 ID：`<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`，并创建 `outputs/runs/<run-id>/`。
-3. 使用 `memory-context-builder` 生成 `memory/latest-context-pack.md`，同时复制本次上下文包到 `outputs/runs/<run-id>/context-pack.md`，并登记可能的 memory 澄清候选。
+3. 使用 `memory-context-builder` 生成本次运行的 `outputs/runs/<run-id>/context-pack.md`，并登记可能的 memory 澄清候选。
 4. 在 `CP-MEMORY` 检查点使用 `clarification-gate`；memory 冲突影响需求理解时优先触发 `AskUserQuestion`。
 5. 使用 `requirement-testability` 生成结构化需求模型，并登记业务规则、状态、权限、边界和接口契约澄清候选。
 6. 在 `CP-REQUIREMENT` 检查点使用 `clarification-gate`；这是主要澄清点，按 `P0/P1/P2/P3` 优先级选择确认项。

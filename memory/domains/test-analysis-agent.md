@@ -48,7 +48,7 @@
 - 独立测试点明细输出到 `outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`。
 - 澄清会话输出到 `outputs/runs/<run-id>/clarification-session.md`。
 - 本次运行上下文快照输出到 `outputs/runs/<run-id>/context-pack.md`。
-- `memory/latest-context-pack.md` 只作为最近一次运行的便捷上下文，可以被后续运行覆盖。
+- `context-pack.md` 是单次运行产物，跟随 `run-id` 保存，不作为全局 memory 文件。
 
 ## 输出偏好补充
 

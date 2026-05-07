@@ -88,8 +88,7 @@ test-analysis-agent/
 │   ├── project-memory.md
 │   ├── domains/
 │   │   └── *.md
-│   ├── testing-experience-memory.md
-│   └── latest-context-pack.md
+│   └── testing-experience-memory.md
 ├── templates/
 ├── quality-gates/
 ├── bin/
@@ -319,8 +318,7 @@ memory/
 ├── project-memory.md
 ├── domains/
 │   └── *.md
-├── testing-experience-memory.md
-└── latest-context-pack.md
+└── testing-experience-memory.md
 ```
 
 | 文件 | 作用 | 更新方式 |
@@ -329,7 +327,8 @@ memory/
 | `project-memory.md` | 保存项目全局事实、全局约束、输出偏好和业务域索引 | 用户确认后人工追加 |
 | `domains/*.md` | 保存按业务域拆分的术语、角色权限、接口/数据约定和设计约束 | 用户确认后人工追加，并登记到 `project-memory.md` |
 | `testing-experience-memory.md` | 保存项目历史缺陷、项目风险模式、评审反馈和团队测试习惯 | 用户确认后人工追加 |
-| `latest-context-pack.md` | 本次运行前生成的轻量上下文包，可覆盖 | 每次运行刷新 |
+
+运行时上下文包写入 `outputs/runs/<run-id>/context-pack.md`，不放在 `memory/` 目录中。
 
 ### 10.3 记忆注入与更新视图
 
@@ -339,7 +338,7 @@ flowchart TD
   Domains["domains/*.md\n业务域术语 / 约定 / 约束"] --> Select
   Experience["testing-experience-memory.md\n历史缺陷 / 风险模式 / 反馈教训"] --> Select
   Requirement["当前需求文档\n标题 / 模块 / 关键词 / 业务对象"] --> Select
-  Select --> Pack["latest-context-pack.md\n本次记忆上下文包"]
+  Select --> Pack["outputs/runs/<run-id>/context-pack.md\n本次记忆上下文包"]
   Pack --> Analysis["需求分析 / 方法路由 / 测试点生成"]
   Analysis --> Proposal["建议沉淀的记忆更新"]
   Proposal --> Confirm{"用户是否确认"}
@@ -354,8 +353,8 @@ flowchart TD
 1. 运行开始时，先读取 `project-memory.md` 的全局内容和业务域索引。
 2. 根据需求标题、模块、角色、业务对象、状态、接口和关键词，选择相关 `domains/*.md` 分片。
 3. 同时检索 `testing-experience-memory.md` 中与本次需求相关的项目经验。
-4. 只摘取与本次需求直接相关的内容，刷新 `latest-context-pack.md`。
-5. 需求分析、方法路由、测试点生成和覆盖审查只读取 `latest-context-pack.md`，避免长期 memory 全量注入。
+4. 只摘取与本次需求直接相关的内容，生成 `outputs/runs/<run-id>/context-pack.md`。
+5. 需求分析、方法路由、测试点生成和覆盖审查只读取当前 run 的 `context-pack.md`，避免长期 memory 全量注入。
 6. 最终报告输出“建议沉淀的 Memory 更新”，说明建议写入哪个长期文件或业务域分片、依据是什么。
 7. 只有用户明确确认后，才把建议追加到 `project-memory.md`、`domains/*.md` 或 `testing-experience-memory.md`。
 
@@ -412,7 +411,7 @@ outputs/runs/<run-id>/
 └── <需求文件名安全短名>.testpoint-details.md
 ```
 
-`run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。`memory/latest-context-pack.md` 只作为最近一次运行的便捷上下文，可被刷新；历史追溯以 `outputs/runs/<run-id>/context-pack.md` 为准。
+`run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。`context-pack.md` 是该 run 的上下文快照；当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。
 
 ## 12. 质量闭环视图
 

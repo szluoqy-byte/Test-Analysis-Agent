@@ -39,7 +39,7 @@ skills:
 
 1. 校验输入是单个 Markdown 需求文档。
 2. 生成本次运行 ID，并创建运行目录 `outputs/runs/<run-id>/`。
-3. 使用 `memory-context-builder` 构建 `memory/latest-context-pack.md`，并复制到 `outputs/runs/<run-id>/context-pack.md`。
+3. 使用 `memory-context-builder` 构建本次运行的 `outputs/runs/<run-id>/context-pack.md`。
 4. 在 `CP-MEMORY` 检查点运行 `clarification-gate`，只处理影响需求理解的 memory 冲突。
 5. 在主会话编排下，让 `requirement-analysis-agent` 生成结构化需求模型和待确认问题。
 6. 在 `CP-REQUIREMENT` 检查点运行 `clarification-gate`，统一收集、去重、分级并限流澄清候选。
@@ -72,7 +72,7 @@ skills:
 - `run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。
 - 每次运行必须创建独立目录 `outputs/runs/<run-id>/`，不得覆盖历史运行产物。
 - 同一次运行的完整报告、测试点明细、澄清会话和上下文包必须放在同一个运行目录。
-- `memory/latest-context-pack.md` 仍可作为“最近一次运行”的便捷上下文，但不作为长期运行产物来源。
+- 当前任务内继续修改或重跑质量门禁时，复用同一运行目录中的 `context-pack.md`。
 
 ## 非目标
 

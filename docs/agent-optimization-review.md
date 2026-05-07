@@ -138,6 +138,7 @@
 - 最终报告的“待确认问题”在交互澄清后刷新，只保留未解决问题，避免已回答问题重复出现在终稿中。
 - 新增 `.editorconfig` 和 `.gitattributes`，固定文本文件使用 UTF-8 与稳定换行，降低 Windows 环境下编码和换行漂移风险。
 - 将运行产物从按需求文件名固定落盘调整为 `outputs/runs/<run-id>/` 运行目录，避免多次执行或同名需求互相覆盖。
+- 移除全局 `memory/latest-context-pack.md`，上下文包只作为 `outputs/runs/<run-id>/context-pack.md` 运行产物存在，避免“最近一次运行”语义污染当前任务。
 
 ## 当前验收标准
 

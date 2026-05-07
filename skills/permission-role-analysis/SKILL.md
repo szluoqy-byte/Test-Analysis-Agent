@@ -11,7 +11,7 @@ description: 当需求提到角色、用户、组织、租户、资源、操作�
 
 - 结构化需求模型。
 - 角色与权限相关片段。
-- `memory/latest-context-pack.md` 中的项目术语、角色和权限上下文。
+- `outputs/runs/<run-id>/context-pack.md` 中的项目术语、角色和权限上下文。
 
 ## 分析步骤
 

@@ -6,7 +6,7 @@
 
 - 在 `memory/project-memory.md` 的“业务域索引”中登记分片路径、关键词、适用范围和状态。
 - `memory-context-builder` 先读取 `memory/project-memory.md`，再根据当前需求的模块、角色、业务对象、状态、接口和关键词选择相关分片。
-- 分片内容不会默认全量注入；只有与本次需求相关的片段会进入 `memory/latest-context-pack.md`。
+- 分片内容不会默认全量注入；只有与本次需求相关的片段会进入当前运行目录的 `context-pack.md`。
 
 ## 分片建议结构
 

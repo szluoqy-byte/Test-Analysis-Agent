@@ -1,6 +1,6 @@
 # 记忆上下文包模板
 
-构建 `memory/latest-context-pack.md` 时使用以下结构。
+构建当前运行目录下的 `context-pack.md` 时使用以下结构。
 
 ```markdown
 # 记忆上下文包
