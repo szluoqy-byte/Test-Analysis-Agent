@@ -44,6 +44,15 @@
 
 ## 独立测试点明细文件
 
-- 必须额外生成 `outputs/testpoint-details/<需求文件名>.testpoint-details.md`。
+- 必须额外生成 `outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`。
 - 独立明细文件必须包含同一张测试点明细表。
 - 独立明细文件不包含覆盖审查、质量门禁、专家评分和记忆更新建议。
+
+## 运行产物路径
+
+- 每次运行必须创建独立目录 `outputs/runs/<run-id>/`。
+- 完整报告路径必须是 `outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md`。
+- 测试点明细路径必须是 `outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`。
+- 澄清会话路径必须是 `outputs/runs/<run-id>/clarification-session.md`。
+- 上下文包快照路径必须是 `outputs/runs/<run-id>/context-pack.md`。
+- 不允许使用只含需求文件名的固定路径覆盖历史运行产物。

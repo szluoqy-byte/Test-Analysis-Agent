@@ -95,9 +95,12 @@ test-analysis-agent/
 ├── bin/
 ├── examples/
 └── outputs/
-    ├── clarifications/
-    ├── test-points/
-    └── testpoint-details/
+    └── runs/
+        └── <run-id>/
+            ├── context-pack.md
+            ├── clarification-session.md
+            ├── <需求文件名安全短名>.test-points.md
+            └── <需求文件名安全短名>.testpoint-details.md
 ```
 
 ### 5.1 目录职责
@@ -127,9 +130,9 @@ test-analysis-agent/
 调用建议：
 
 - 面向用户的稳定入口是主 skill：`analyze-requirement-testpoints`。
-- `test-analysis-orchestrator` 作为端到端 subagent，总控完整链路。
+- `test-analysis-orchestrator` 是可选端到端 subagent，用于用户显式要求 agent 团队协作或 Claude Code 自动路由到 agent 的场景。
 - `requirement-analysis-agent`、`testpoint-generation-agent` 和 `coverage-review-agent` 作为阶段性 subagent，可被编排 agent 或用户显式调用。
-- 自动选择 subagent 依赖 Claude Code 对 `description` 的匹配；关键流程仍以主 skill 和编排 agent 明确串联，避免只依赖隐式路由。
+- 自动选择 subagent 依赖 Claude Code 对 `description` 的匹配；关键流程规范以主 skill 为准，编排 agent 只做协作映射，不维护另一套流程真相。
 
 ## 6. 分层架构视图
 
@@ -190,7 +193,7 @@ flowchart TD
   C4 --> Ask
   C5 --> Ask
   Ask -- "是" --> AUQ["AskUserQuestion\n用户选择或自定义回答"]
-  AUQ --> CS["澄清会话产物\noutputs/clarifications"]
+  AUQ --> CS["澄清会话产物\noutputs/runs/<run-id>"]
   CS --> Resume["合并本次上下文\n继续当前检查点后续流程"]
   Ask -- "否" --> Risk["保留待确认风险\n继续分析"]
   Risk --> Resume
@@ -386,7 +389,7 @@ flowchart LR
 
 | 产物 | 来源 | 作用 |
 |---|---|---|
-| 记忆上下文包 | `memory-context-builder` | 注入本次相关的项目语境和测试经验 |
+| 记忆上下文包 | `memory-context-builder` | 注入本次相关的项目语境和测试经验，并在运行目录保留快照 |
 | 结构化需求模型 | `requirement-testability` | 提取模块、规则、状态、接口、权限和待确认问题 |
 | 澄清候选队列 | 各阶段 skill | 记录不确定项、影响、阻塞级别、优先级和提问策略 |
 | 澄清会话产物 | `clarification-gate` | 记录 AskUserQuestion 问题队列、未触发原因、用户回答、已解决问题和刷新后的未解决待确认问题 |
@@ -396,6 +399,20 @@ flowchart LR
 | 覆盖审查结果 | `coverage-review` | 判断覆盖是否充分 |
 | 质量门禁结果 | `quality-gates/` | 判断是否满足输出质量要求 |
 | 专家评审评分 | `expert-review-rubric.md` | 衡量是否达到测试专家最低标准 |
+
+### 11.2 运行目录
+
+每次分析必须创建独立运行目录，避免多次执行覆盖历史产物。
+
+```text
+outputs/runs/<run-id>/
+├── context-pack.md
+├── clarification-session.md
+├── <需求文件名安全短名>.test-points.md
+└── <需求文件名安全短名>.testpoint-details.md
+```
+
+`run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。`memory/latest-context-pack.md` 只作为最近一次运行的便捷上下文，可被刷新；历史追溯以 `outputs/runs/<run-id>/context-pack.md` 为准。
 
 ## 12. 质量闭环视图
 
@@ -449,7 +466,7 @@ flowchart TD
 
 | Agent | 职责 |
 |---|---|
-| `test-analysis-orchestrator` | 总控完整流程，连接记忆、需求分析、方法路由、测试点生成和审查 |
+| `test-analysis-orchestrator` | 可选端到端编排代理，连接记忆、需求分析、方法路由、测试点生成和审查；流程以主入口 skill 为准 |
 | `requirement-analysis-agent` | 结构化需求，识别可测性缺口和方法触发信号 |
 | `testpoint-generation-agent` | 基于测试方法生成测试点 |
 | `coverage-review-agent` | 执行覆盖审查、质量门禁和专家评分 |
@@ -500,13 +517,25 @@ flowchart TD
 完整报告路径：
 
 ```text
-outputs/test-points/<需求文件名>.test-points.md
+outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md
 ```
 
 独立测试点明细路径：
 
 ```text
-outputs/testpoint-details/<需求文件名>.testpoint-details.md
+outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md
+```
+
+澄清会话路径：
+
+```text
+outputs/runs/<run-id>/clarification-session.md
+```
+
+上下文包快照路径：
+
+```text
+outputs/runs/<run-id>/context-pack.md
 ```
 
 最终报告结构：

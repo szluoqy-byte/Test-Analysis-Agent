@@ -146,7 +146,7 @@ description: 在多个测试分析检查点使用。用于收集、去重、分�
 
 ## 会话产物
 
-创建或更新 `outputs/clarifications/<需求文件名>.clarification-session.md`，记录：
+创建或更新 `outputs/runs/<run-id>/clarification-session.md`，记录：
 
 - 当前检查点。
 - 澄清问题队列。

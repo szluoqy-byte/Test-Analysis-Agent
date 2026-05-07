@@ -21,7 +21,7 @@
 ## 建议命令
 
 ```bash
-bin/semantic-testpoint-check.py outputs/test-points/<需求文件名>.test-points.md
+bin/semantic-testpoint-check.py outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md
 bin/smoke-test-analysis.py
 ```
 

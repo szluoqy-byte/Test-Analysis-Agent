@@ -39,6 +39,8 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 - 约束和非范围。
 - memory 澄清候选问题，仅限业务域命中冲突或 memory 与当前需求明显冲突的情况。
 
+同时将本次运行实际使用的上下文包复制到 `outputs/runs/<run-id>/context-pack.md`，作为不可覆盖的运行产物。
+
 ## 约束
 
 - 不全量读取所有业务域分片。
@@ -47,3 +49,4 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 - context pack 保持简洁、相关、有依据。
 - 未经用户明确确认，不更新 memory 源文件。
 - 本 skill 不直接触发 `AskUserQuestion`；只向 `clarification-gate` 提供候选。
+- `memory/latest-context-pack.md` 可被后续运行刷新，不能作为历史运行追溯的唯一来源。

@@ -4,6 +4,7 @@
 # <需求名称> 测试点明细
 
 - 输入文档：
+- 运行 ID：
 - 来源报告：
 - 生成时间：
 - 说明：本文件仅保存测试点明细，不包含覆盖审查、质量门禁、专家评分和记忆更新建议。
@@ -28,6 +29,6 @@
 
 ## 落盘规则
 
-- 完整报告路径：`outputs/test-points/<需求文件名>.test-points.md`。
-- 独立明细路径：`outputs/testpoint-details/<需求文件名>.testpoint-details.md`。
-- 独立明细文件必须与完整报告中的 `## 7. 测试点明细` 内容保持一致。
+- 完整报告路径：`outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md`。
+- 独立明细路径：`outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`。
+- 独立明细文件必须与完整报告中的 `## 8. 测试点明细` 内容保持一致。

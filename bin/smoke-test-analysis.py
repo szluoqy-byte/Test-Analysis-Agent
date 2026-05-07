@@ -29,6 +29,7 @@ REQUIRED_FILES = [
     "templates/clarification-template.md",
     "quality-gates/output-schema-check.md",
     "quality-gates/semantic-quality-check.md",
+    "outputs/runs/.gitkeep",
     "examples/evaluation-matrix.md",
     "bin/lint-testpoint-report.py",
     "bin/semantic-testpoint-check.py",
@@ -58,6 +59,15 @@ def find_artifact(repo_root: Path, stem: str, suffix: str) -> Path:
     ]
     for candidate in candidates:
         if candidate.exists():
+            return candidate
+
+    run_candidates = sorted(
+        (repo_root / "outputs" / "runs").glob(f"*/*{suffix}"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    for candidate in run_candidates:
+        if candidate.name == f"{stem}{suffix}" or candidate.name.endswith(suffix):
             return candidate
     raise FileNotFoundError(f"未找到 {stem}{suffix}")
 

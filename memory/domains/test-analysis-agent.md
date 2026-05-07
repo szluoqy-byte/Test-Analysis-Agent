@@ -43,9 +43,12 @@
 
 ## 接口和数据约定
 
-- 完整报告输出到 `outputs/test-points/<需求文件名>.test-points.md`。
-- 独立测试点明细输出到 `outputs/testpoint-details/<需求文件名>.testpoint-details.md`。
-- 本次运行上下文输出到 `memory/latest-context-pack.md`，可以被后续运行覆盖。
+- 每次运行创建独立目录 `outputs/runs/<run-id>/`。
+- 完整报告输出到 `outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md`。
+- 独立测试点明细输出到 `outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`。
+- 澄清会话输出到 `outputs/runs/<run-id>/clarification-session.md`。
+- 本次运行上下文快照输出到 `outputs/runs/<run-id>/context-pack.md`。
+- `memory/latest-context-pack.md` 只作为最近一次运行的便捷上下文，可以被后续运行覆盖。
 
 ## 输出偏好补充
 

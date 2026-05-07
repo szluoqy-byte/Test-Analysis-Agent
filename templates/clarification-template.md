@@ -57,6 +57,8 @@
 ## 基本信息
 
 - 需求文档：
+- 运行 ID：
+- 运行目录：
 - 生成时间：
 - 当前检查点：
 - 当前状态：Pending / Answered / ContinuedWithRisk
