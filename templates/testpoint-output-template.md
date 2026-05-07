@@ -29,6 +29,6 @@
 
 ## 落盘规则
 
-- 完整报告路径：`outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md`。
-- 独立明细路径：`outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`。
+- 完整报告路径：`${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md`。
+- 独立明细路径：`${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`。
 - 独立明细文件必须与完整报告中的 `## 8. 测试点明细` 内容保持一致。

@@ -20,7 +20,7 @@ description: 当需要按产品、业务、数据、权限、集成、运维和�
 
 - 使用 `knowledge/expert-rules.md` 判断风险覆盖方向。
 - 使用 `knowledge/defect-patterns.md` 匹配通用缺陷模式。
-- 使用 `outputs/runs/<run-id>/context-pack.md` 中的项目历史缺陷和项目风险模式修正关注点。
+- 使用 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md` 中的项目历史缺陷和项目风险模式修正关注点。
 - 使用 `knowledge/risk-level-rules.md` 判断建议级别，级别定义仍以 `knowledge/testpoint-standard.md` 为准。
 
 ## 级别规则

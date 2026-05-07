@@ -139,6 +139,9 @@
 - 新增 `.editorconfig` 和 `.gitattributes`，固定文本文件使用 UTF-8 与稳定换行，降低 Windows 环境下编码和换行漂移风险。
 - 将运行产物从按需求文件名固定落盘调整为 `outputs/runs/<run-id>/` 运行目录，避免多次执行或同名需求互相覆盖。
 - 移除全局 `memory/latest-context-pack.md`，上下文包只作为 `outputs/runs/<run-id>/context-pack.md` 运行产物存在，避免“最近一次运行”语义污染当前任务。
+- 新增 `PROJECT_ROOT` 解析和输出路径硬约束，避免 Claude Code 以 skill 工作目录为基准时把 `outputs/runs` 写入 skill 或插件缓存目录。
+- 收紧 `clarification-gate` 触发规则：`P0/MustAsk` 必问、`P1/ShouldAsk` 应问，`CP-REQUIREMENT` 后存在重要候选但未触发时必须记录明确原因。
+- 删除 `memory/domains/test-analysis-agent.md` 框架自身分片，`domains/` 仅作为用户自定义业务域扩展区；业务域分片改为自动扫描匹配，不再要求维护 `project-memory.md` 索引。
 
 ## 当前验收标准
 

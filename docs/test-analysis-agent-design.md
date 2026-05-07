@@ -110,12 +110,12 @@ test-analysis-agent/
 | `agents/` | Claude Code subagent 角色定义，负责阶段性专家分工 |
 | `skills/` | 测试分析方法能力，负责具体分析动作 |
 | `knowledge/` | 稳定专家知识、缺陷模式、测试标准、覆盖体系 |
-| `memory/` | 经人工确认的项目上下文、测试经验和本次上下文包 |
+| `memory/` | 经人工确认的项目上下文、领域事实和测试经验 |
 | `templates/` | 中间产物和最终报告格式 |
 | `quality-gates/` | Agent 可读的质量门禁规则 |
 | `bin/` | 可机械执行的结构 lint、语义启发式检查和 smoke 回归脚本 |
 | `examples/` | 回归样例需求和输出 |
-| `outputs/` | 实际生成的完整测试点报告和独立测试点明细 |
+| `outputs/` | 基于项目根目录保存的运行产物、完整测试点报告和独立测试点明细 |
 
 ### 5.2 Claude Code 插件兼容性
 
@@ -192,7 +192,7 @@ flowchart TD
   C4 --> Ask
   C5 --> Ask
   Ask -- "是" --> AUQ["AskUserQuestion\n用户选择或自定义回答"]
-  AUQ --> CS["澄清会话产物\noutputs/runs/<run-id>"]
+  AUQ --> CS["澄清会话产物\n${PROJECT_ROOT}/outputs/runs/<run-id>"]
   CS --> Resume["合并本次上下文\n继续当前检查点后续流程"]
   Ask -- "否" --> Risk["保留待确认风险\n继续分析"]
   Risk --> Resume
@@ -324,21 +324,21 @@ memory/
 | 文件 | 作用 | 更新方式 |
 |---|---|---|
 | `README.md` | 说明 memory 的定义、边界和使用方法 | 随架构调整更新 |
-| `project-memory.md` | 保存项目全局事实、全局约束、输出偏好和业务域索引 | 用户确认后人工追加 |
-| `domains/*.md` | 保存按业务域拆分的术语、角色权限、接口/数据约定和设计约束 | 用户确认后人工追加，并登记到 `project-memory.md` |
+| `project-memory.md` | 保存项目全局事实、全局约束和输出偏好 | 用户确认后人工追加 |
+| `domains/*.md` | 保存用户自定义业务域的术语、角色权限、接口/数据约定和设计约束 | 用户确认后人工追加；新增分片自动扫描，无需登记索引 |
 | `testing-experience-memory.md` | 保存项目历史缺陷、项目风险模式、评审反馈和团队测试习惯 | 用户确认后人工追加 |
 
-运行时上下文包写入 `outputs/runs/<run-id>/context-pack.md`，不放在 `memory/` 目录中。
+运行时上下文包写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`，不放在 `memory/` 目录中。
 
 ### 10.3 记忆注入与更新视图
 
 ```mermaid
 flowchart TD
-  Project["project-memory.md\n全局事实 / 业务域索引 / 输出偏好"] --> Select["memory-context-builder\n筛选相关记忆"]
+  Project["project-memory.md\n全局事实 / 输出偏好"] --> Select["memory-context-builder\n筛选相关记忆"]
   Domains["domains/*.md\n业务域术语 / 约定 / 约束"] --> Select
   Experience["testing-experience-memory.md\n历史缺陷 / 风险模式 / 反馈教训"] --> Select
   Requirement["当前需求文档\n标题 / 模块 / 关键词 / 业务对象"] --> Select
-  Select --> Pack["outputs/runs/<run-id>/context-pack.md\n本次记忆上下文包"]
+  Select --> Pack["${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md\n本次记忆上下文包"]
   Pack --> Analysis["需求分析 / 方法路由 / 测试点生成"]
   Analysis --> Proposal["建议沉淀的记忆更新"]
   Proposal --> Confirm{"用户是否确认"}
@@ -350,10 +350,10 @@ flowchart TD
 
 ### 10.4 使用方法
 
-1. 运行开始时，先读取 `project-memory.md` 的全局内容和业务域索引。
-2. 根据需求标题、模块、角色、业务对象、状态、接口和关键词，选择相关 `domains/*.md` 分片。
+1. 运行开始时，先读取 `project-memory.md` 的全局内容。
+2. 自动扫描 `domains/*.md`，跳过 `README.md`，根据需求标题、模块、角色、业务对象、状态、接口、关键词和分片自身元信息选择相关分片。
 3. 同时检索 `testing-experience-memory.md` 中与本次需求相关的项目经验。
-4. 只摘取与本次需求直接相关的内容，生成 `outputs/runs/<run-id>/context-pack.md`。
+4. 只摘取与本次需求直接相关的内容，生成 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
 5. 需求分析、方法路由、测试点生成和覆盖审查只读取当前 run 的 `context-pack.md`，避免长期 memory 全量注入。
 6. 最终报告输出“建议沉淀的 Memory 更新”，说明建议写入哪个长期文件或业务域分片、依据是什么。
 7. 只有用户明确确认后，才把建议追加到 `project-memory.md`、`domains/*.md` 或 `testing-experience-memory.md`。
@@ -401,17 +401,19 @@ flowchart LR
 
 ### 11.2 运行目录
 
-每次分析必须创建独立运行目录，避免多次执行覆盖历史产物。
+每次分析必须先定位 `PROJECT_ROOT`，再创建独立运行目录，避免多次执行覆盖历史产物。`PROJECT_ROOT` 的解析规则是：从需求文档绝对路径所在目录向上查找 `.claude-plugin/plugin.json`、`memory/project-memory.md` 或 `.git/`，禁止使用 skill 文件目录、插件缓存目录或 Claude Code 内部 skill 工作目录作为项目根。
 
 ```text
-outputs/runs/<run-id>/
+${PROJECT_ROOT}/outputs/runs/<run-id>/
 ├── context-pack.md
 ├── clarification-session.md
 ├── <需求文件名安全短名>.test-points.md
 └── <需求文件名安全短名>.testpoint-details.md
 ```
 
-`run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。`context-pack.md` 是该 run 的上下文快照；当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。
+`run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。`context-pack.md` 是该 run 的上下文快照；当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件必须使用 `${PROJECT_ROOT}` 下的绝对路径。
+
+不得在 `skills/`、`.claude-plugin/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。如果无法定位项目根目录，必须先向用户确认，不得继续生成产物。
 
 ## 12. 质量闭环视图
 
@@ -513,28 +515,28 @@ flowchart TD
 
 ## 14. 输出契约
 
-完整报告路径：
+完整报告实际写入路径：
 
 ```text
-outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md
 ```
 
-独立测试点明细路径：
+独立测试点明细实际写入路径：
 
 ```text
-outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md
 ```
 
 澄清会话路径：
 
 ```text
-outputs/runs/<run-id>/clarification-session.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/clarification-session.md
 ```
 
 上下文包快照路径：
 
 ```text
-outputs/runs/<run-id>/context-pack.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md
 ```
 
 最终报告结构：

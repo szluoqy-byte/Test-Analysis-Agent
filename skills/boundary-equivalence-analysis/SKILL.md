@@ -12,7 +12,7 @@ description: 当需求包含范围、阈值、数量、金额、时间窗口、�
 - 结构化需求片段。
 - 需求依据。
 - `knowledge/defect-patterns.md`。
-- `outputs/runs/<run-id>/context-pack.md`。
+- `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
 
 ## 分析步骤
 
