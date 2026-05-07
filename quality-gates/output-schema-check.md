@@ -50,7 +50,8 @@
 
 ## 运行产物路径
 
-- 每次运行必须先定位 `PROJECT_ROOT`，再创建独立目录 `${PROJECT_ROOT}/outputs/runs/<run-id>/`。
+- 每次运行必须先将当前 Claude Code 会话工作目录固定为 `PROJECT_ROOT`，再创建独立目录 `${PROJECT_ROOT}/outputs/runs/<run-id>/`。
+- 不得从需求文档路径向上查找或反推 `PROJECT_ROOT`。
 - 完整报告路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md`。
 - 测试点明细路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`。
 - 澄清会话路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/clarification-session.md`。

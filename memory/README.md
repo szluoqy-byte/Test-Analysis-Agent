@@ -10,7 +10,7 @@ Memory 是 Agent 在多次需求分析之间保留的、经人工确认的项目
 | `domains/*.md` | 用户自定义业务域分片，保存项目事实、业务术语、角色权限、接口/数据约定和设计约束 | 自动扫描，按需注入 |
 | `testing-experience-memory.md` | 项目历史缺陷、项目风险模式、评审反馈、团队测试习惯 | 作为项目测试经验来源 |
 
-运行时上下文包不保存在 `memory/` 下；每次分析先定位 `PROJECT_ROOT`，再写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
+运行时上下文包不保存在 `memory/` 下；每次分析先将当前 Claude Code 会话工作目录固定为 `PROJECT_ROOT`，再写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
 
 ## 运行产物
 

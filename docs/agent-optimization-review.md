@@ -140,6 +140,7 @@
 - 将运行产物从按需求文件名固定落盘调整为 `outputs/runs/<run-id>/` 运行目录，避免多次执行或同名需求互相覆盖。
 - 移除全局 `memory/latest-context-pack.md`，上下文包只作为 `outputs/runs/<run-id>/context-pack.md` 运行产物存在，避免“最近一次运行”语义污染当前任务。
 - 新增 `PROJECT_ROOT` 解析和输出路径硬约束，避免 Claude Code 以 skill 工作目录为基准时把 `outputs/runs` 写入 skill 或插件缓存目录。
+- 将 `PROJECT_ROOT` 规则简化为当前 Claude Code 会话工作目录，需求文档路径只用于读取需求，不再向上查找或反推项目根。
 - 收紧 `clarification-gate` 触发规则：`P0/MustAsk` 必问、`P1/ShouldAsk` 应问，`CP-REQUIREMENT` 后存在重要候选但未触发时必须记录明确原因。
 - 删除 `memory/domains/test-analysis-agent.md` 框架自身分片，`domains/` 仅作为用户自定义业务域扩展区；业务域分片改为自动扫描匹配，不再要求维护 `project-memory.md` 索引。
 - 统一设计文档主链路：主入口 skill 是流程真相，agents 仅为可选协作；Memory 与运行产物分离，context pack 不再被描述为长期 Memory。

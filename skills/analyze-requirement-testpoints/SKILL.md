@@ -21,13 +21,13 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 
 ## 项目根目录与输出路径
 
-在生成任何运行产物前，必须先解析 `PROJECT_ROOT`：
+在生成任何运行产物前，必须先固定 `PROJECT_ROOT`：
 
-1. 如果 `$ARGUMENTS` 是绝对路径，从需求文档所在目录向上查找项目根标识。
-2. 如果 `$ARGUMENTS` 是相对路径，先按用户当前会话工作目录解析为绝对路径，再向上查找项目根标识。
-3. 项目根标识优先级为 `.claude-plugin/plugin.json`、`memory/project-memory.md`、`.git/`。
-4. 禁止把 skill 文件所在目录、插件缓存目录或 Claude Code 的内部 skill 工作目录当作 `PROJECT_ROOT`。
-5. 如果无法定位 `PROJECT_ROOT`，必须先向用户确认项目根目录，不得继续生成报告。
+1. `PROJECT_ROOT` 等于用户启动 Claude Code 或当前 Claude Code 会话所在的工作目录。
+2. `$ARGUMENTS` 只用于定位需求文档；不得从需求文档路径向上反推 `PROJECT_ROOT`。
+3. 如果 `$ARGUMENTS` 是相对路径，只按 `PROJECT_ROOT` 解析为绝对路径。
+4. 禁止把 skill 文件所在目录、插件缓存目录、`.claude-plugin/` 或 Claude Code 的内部 skill 工作目录当作 `PROJECT_ROOT`。
+5. 如果当前工作目录明显是上述禁止目录，必须先向用户确认正确工作目录，不得继续生成报告。
 
 所有运行产物必须写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/`。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件时必须使用基于 `PROJECT_ROOT` 的绝对路径。
 
@@ -36,7 +36,7 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 ## 执行流程
 
 1. 校验输入必须是单个 Markdown 文件。
-2. 解析 `PROJECT_ROOT`，生成本次运行 ID：`<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`，并创建 `${PROJECT_ROOT}/outputs/runs/<run-id>/`。
+2. 将当前 Claude Code 会话工作目录固定为 `PROJECT_ROOT`，生成本次运行 ID：`<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`，并创建 `${PROJECT_ROOT}/outputs/runs/<run-id>/`。
 3. 使用 `memory-context-builder` 生成本次运行的 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`，并登记可能的 memory 澄清候选。
 4. 在 `CP-MEMORY` 检查点使用 `clarification-gate`；memory 冲突影响需求理解时优先触发 `AskUserQuestion`。
 5. 使用 `requirement-testability` 生成结构化需求模型，并登记业务规则、状态、权限、边界和接口契约澄清候选。
@@ -94,6 +94,7 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 - 不编造需求中没有的业务规则。
 - 不直接覆盖历史运行产物；所有本次运行产物必须写入同一个 `${PROJECT_ROOT}/outputs/runs/<run-id>/` 目录。
 - 不允许在 `skills/`、`.claude-plugin/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。
+- 下游 skill 不得重新解析、搜索或修正 `PROJECT_ROOT`；只能使用主入口固定后的值。
 - `AskUserQuestion` 只在主会话中触发，不交给 subagent 内部触发。
 - 多个环节只登记澄清候选，不直接向用户提问。
 - `AskUserQuestion` 按优先级触发：`P0/MustAsk` 必问，`P1/ShouldAsk` 应问，`P2/P3` 默认进入待确认或忽略。

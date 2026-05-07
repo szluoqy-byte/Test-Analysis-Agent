@@ -178,7 +178,7 @@ bin = 对报告结构和非用例化约束做机械校验
 
 ```mermaid
 flowchart TD
-  A["输入 Markdown 需求文档"] --> PR["解析 PROJECT_ROOT\n创建 run 目录"]
+  A["输入 Markdown 需求文档"] --> PR["固定当前会话 cwd 为 PROJECT_ROOT\n创建 run 目录"]
   PR --> B["主入口 skill\nanalyze-requirement-testpoints"]
   B --> C["构建记忆上下文包\nmemory-context-builder"]
   C --> C1["CP-MEMORY\nclarification-gate"]
@@ -228,7 +228,7 @@ sequenceDiagram
   participant L as 校验脚本
 
   U->>E: 提供 Markdown 需求文档
-  E->>E: 解析 PROJECT_ROOT / 创建 run 目录
+  E->>E: 固定当前会话工作目录为 PROJECT_ROOT / 创建 run 目录
   opt 用户显式要求 agent 团队协作
     E->>O: 委托阶段性协作，流程仍以主 skill 为准
   end
@@ -426,7 +426,7 @@ flowchart LR
 
 ### 11.2 运行目录
 
-每次分析必须先定位 `PROJECT_ROOT`，再创建独立运行目录，避免多次执行覆盖历史产物。`PROJECT_ROOT` 的解析规则是：从需求文档绝对路径所在目录向上查找 `.claude-plugin/plugin.json`、`memory/project-memory.md` 或 `.git/`，禁止使用 skill 文件目录、插件缓存目录或 Claude Code 内部 skill 工作目录作为项目根。
+每次分析必须先固定 `PROJECT_ROOT`，再创建独立运行目录，避免多次执行覆盖历史产物。`PROJECT_ROOT` 的规则是：使用用户启动 Claude Code 或当前 Claude Code 会话所在的工作目录。需求文档路径只用于读取需求，不用于反推项目根目录。
 
 ```text
 ${PROJECT_ROOT}/outputs/runs/<run-id>/
@@ -438,7 +438,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/
 
 `run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。`context-pack.md` 是该 run 的上下文快照；当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件必须使用 `${PROJECT_ROOT}` 下的绝对路径。
 
-不得在 `skills/`、`.claude-plugin/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。如果无法定位项目根目录，必须先向用户确认，不得继续生成产物。
+不得在 `skills/`、`.claude-plugin/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。如果当前工作目录明显是这些禁止目录，必须先向用户确认正确工作目录，不得继续生成产物。下游 skill 不得重新解析、搜索或修正 `PROJECT_ROOT`。
 
 ## 12. 质量闭环视图
 
