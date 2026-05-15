@@ -13,10 +13,13 @@ Memory = 经确认的项目上下文和项目历史经验
 | 内容类型 | 放置位置 | 原因 |
 |---|---|---|
 | 测试点定义、字段、类型、方法、级别 | `knowledge/testpoint-standard.md` | 稳定标准，所有 skill 共用 |
+| 测试分析与测试设计边界、分析维度和交付件落点 | `knowledge/test-analysis-methodology.md` | Analysis 项目的上位方法论 |
+| 测试场景、场景测试条件、测试点和测试用例边界 | `knowledge/test-scenario-point-case-boundary.md` | 后续设计输入的层级边界标准 |
+| 设计输入使用的测试类型大类和子类 | `knowledge/basic-test-types.md` | 与后续独立测试设计项目的测试类型体系保持一致 |
 | 风险优先、异常优先、状态优先等专家原则 | `knowledge/expert-rules.md` | 通用测试专家规则 |
 | 空值、重复提交、越权、幂等等通用缺陷模式 | `knowledge/defect-patterns.md` | 跨项目缺陷启发 |
 | 需求文档、需求依据、方法证据、记忆上下文包等框架术语 | `knowledge/domain-glossary.md` | 稳定分析术语，所有 skill 共用 |
-| 需求信号到测试方法的映射 | `knowledge/test-method-routing-matrix.md` | 稳定路由知识 |
+| 分析维度、需求信号到测试方法的映射 | `knowledge/test-method-routing-matrix.md` | 稳定路由知识 |
 | Level 0 到 Level 4 的判定规则 | `knowledge/risk-level-rules.md` | 级别标准应全局一致 |
 | 方法分析证据字段和质量要求 | `knowledge/method-evidence-standard.md` | 证明测试理论被实际应用的统一标准 |
 | 某个测试方法的执行步骤 | `skills/*/SKILL.md` | 过程性动作，不是事实库 |
@@ -24,7 +27,8 @@ Memory = 经确认的项目上下文和项目历史经验
 | 项目全局事实、全局约束、输出偏好和项目专属术语覆盖 | `memory/project-memory.md` | 项目专属且经确认 |
 | 不同业务域的业务术语、角色权限、接口约定、数据约定和设计约束 | `memory/domains/*.md` | 用户自定义扩展区，自动扫描并按需匹配 |
 | 项目真实历史缺陷、复盘教训、团队测试习惯 | `memory/testing-experience-memory.md` | 项目专属经验 |
-| 本次运行筛选出的少量上下文 | `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md` | 运行产物，不是长期事实源 |
+| 本次运行筛选出的少量上下文 | `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md` | 运行产物，不是长期事实源 |
+| 运行产物分类、固定文件名和下游消费约定 | `docs/output-artifact-contract.md` | 输出契约，防止 skill、模板和脚本各自发散 |
 | 报告、中间产物和运行产物的 Markdown 结构 | `templates/*.md` | 模板层只定义形状和占位，不维护另一套标准 |
 | 输出是否通过的检查项、失败条件和字段校验 | `quality-gates/*.md` | 质量门禁层负责判定，不产生新知识 |
 | 可机械执行的结构、语义和回归检查 | `bin/*.py` | 脚本层只做确定性校验 |
@@ -38,7 +42,7 @@ Memory = 经确认的项目上下文和项目历史经验
 - `knowledge/` 不保存项目事实、用户临时偏好、单次运行结果和未确认假设。
 - `memory/domains/*.md` 不需要登记索引；新增分片应自带清晰标题、适用范围、关键词或术语，便于自动匹配。
 - `context-pack.md` 只摘录与本次需求相关的 memory，不复制整份长期 memory，也不放在 `memory/` 下。
-- `templates/` 可以列出字段、占位和最小示例，但字段含义、类型、方法、级别等标准必须引用 `knowledge/`。
+- `templates/` 只列出字段、占位和最小示例，不直接维护或长篇引用背景知识；字段含义、类型、方法、级别等标准由调用模板的 `skills/` 和 `quality-gates/` 按需引用 `knowledge/`。
 - `quality-gates/` 可以重复列出允许值用于校验，但必须以 `knowledge/` 的标准为来源，不维护独立定义。
 - `bin/` 中的枚举和章节列表必须服务于机械校验；如果标准变化，应同步来自 `knowledge/`、`templates/` 或 `quality-gates/` 的权威来源。
 

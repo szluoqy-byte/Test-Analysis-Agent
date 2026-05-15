@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lint a Markdown testcase design input file for Test-Design-Agent."""
+"""Lint a Markdown testcase design input file for downstream testcase design."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ REQUIRED_CONDITIONS = {
     "测试数据因子",
     "业务设计约束",
 }
-ALLOWED_CATEGORY_PAIRS = {
+DEFAULT_ALLOWED_CATEGORY_PAIRS = {
     ("功能性", "功能正确性测试"),
     ("功能性", "功能交互测试"),
     ("功能性", "协议一致性测试"),
@@ -55,7 +55,22 @@ ALLOWED_LEVELS = {"Level 0", "Level 1", "Level 2", "Level 3", "Level 4"}
 BANNED_COLUMNS = {"方法", "需求依据", "模块", "操作步骤", "测试数据", "预期结果"}
 HARD_STEP_WORDS = ("点击", "然后", "步骤", "断言", "执行用例", "输入以下", "预期结果")
 SOFT_STEP_WORDS = ("输入", "选择", "调用接口")
+METHOD_ARTIFACT_WORDS = ("边界值", "等价类", "判定表", "组合矩阵", "状态迁移矩阵", "测试设计方法")
 EMPTY_MARKERS = {"", "<需要确认的问题>", "<影响场景/测试点>", "<测试场景名称>"}
+GENERIC_REFERENCE_WORDS = (
+    "见原始需求",
+    "详见原始需求",
+    "参考原始需求",
+    "见需求",
+    "详见需求",
+    "参考需求",
+    "按需求",
+    "按需实现",
+    "同上",
+    "TBD",
+    "待补充",
+    "待定",
+)
 
 
 def split_row(line: str) -> list[str]:
@@ -92,6 +107,56 @@ def collect_all_tables(lines: list[str], header: str) -> list[list[tuple[int, li
     return tables
 
 
+def normalize_heading_name(value: str) -> str:
+    return re.sub(r"\s*（.*?）\s*$", "", value).strip()
+
+
+def load_allowed_category_pairs() -> set[tuple[str, str]]:
+    repo_root = Path(__file__).resolve().parents[1]
+    type_path = repo_root / "knowledge" / "basic-test-types.md"
+    if not type_path.exists():
+        return DEFAULT_ALLOWED_CATEGORY_PAIRS
+
+    pairs: set[tuple[str, str]] = set()
+    categories_without_subtypes: set[str] = set()
+    current_category = ""
+    for line in type_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## ") and not line.startswith("### "):
+            current_category = normalize_heading_name(line[3:])
+            if current_category and current_category != "目录":
+                categories_without_subtypes.add(current_category)
+            continue
+        if line.startswith("### ") and current_category:
+            subtype = normalize_heading_name(line[4:])
+            if subtype:
+                pairs.add((current_category, subtype))
+                categories_without_subtypes.discard(current_category)
+
+    for category in categories_without_subtypes:
+        pairs.add((category, category))
+    return pairs or DEFAULT_ALLOWED_CATEGORY_PAIRS
+
+
+def allowed_type_names(allowed_pairs: set[tuple[str, str]]) -> set[str]:
+    names: set[str] = set()
+    for category, subtype in allowed_pairs:
+        names.add(category)
+        names.add(subtype)
+        names.add(f"{category}测试")
+    return names
+
+
+def split_type_names(value: str) -> list[str]:
+    return [part.strip() for part in re.split(r"[、,，/]+", value) if part.strip()]
+
+
+def has_generic_reference(value: str) -> bool:
+    compact = value.strip()
+    if not compact:
+        return False
+    return any(word in compact for word in GENERIC_REFERENCE_WORDS)
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print("用法: lint-testcase-design-input.py <测试用例设计输入.md>", file=sys.stderr)
@@ -102,6 +167,8 @@ def main() -> int:
     lines = text.splitlines()
     errors: list[str] = []
     warnings: list[str] = []
+    allowed_category_pairs = load_allowed_category_pairs()
+    allowed_type_values = allowed_type_names(allowed_category_pairs)
 
     for section in REQUIRED_SECTIONS:
         if section == "# ":
@@ -135,6 +202,8 @@ def main() -> int:
         value = info_fields.get(field, "")
         if not value:
             errors.append(f"需求信息缺少内容: {field}")
+        elif has_generic_reference(value):
+            errors.append(f"需求信息 `{field}` 使用了非自包含占位表达: {value}")
 
     scenario_rows = [
         (line_number, cells)
@@ -159,6 +228,9 @@ def main() -> int:
         for label, value in [("场景名称", name), ("场景测试类型", scene_type), ("场景目标", goal)]:
             if not value:
                 errors.append(f"第 {line_number} 行：{label} 不能为空")
+        for scene_type_name in split_type_names(scene_type):
+            if scene_type_name not in allowed_type_values:
+                errors.append(f"第 {line_number} 行：场景测试类型不在基础测试类型知识库中: {scene_type_name}")
         if name in {"功能测试", "接口测试", "性能测试", "测试场景"}:
             warnings.append(f"第 {line_number} 行：场景名称可能过于泛化: {name}")
 
@@ -181,6 +253,8 @@ def main() -> int:
             value = condition_values.get(condition, "")
             if not value:
                 errors.append(f"第 {table_index} 个场景的条件 `{condition}` 内容为空")
+            elif has_generic_reference(value):
+                errors.append(f"第 {table_index} 个场景的条件 `{condition}` 使用了非自包含占位表达: {value}")
         data_factors = condition_values.get("测试数据因子", "")
         if data_factors and not any(mark in data_factors for mark in ["：", ":", "、", "/", "；", ";"]):
             warnings.append(f"第 {table_index} 个场景的测试数据因子可能不够结构化")
@@ -212,17 +286,21 @@ def main() -> int:
         if test_id != expected:
             errors.append(f"第 {line_number} 行：期望测试点 ID {expected}，实际 {test_id}")
         expected_tp_id += 1
-        if (category, subtype) not in ALLOWED_CATEGORY_PAIRS:
+        if (category, subtype) not in allowed_category_pairs:
             errors.append(f"第 {line_number} 行：非法大类/子类组合 {category}/{subtype}")
         if level not in ALLOWED_LEVELS:
             errors.append(f"第 {line_number} 行：非法级别 {level}")
         for label, value in [("测试点", testpoint), ("风险/备注", risk_note)]:
             if not value:
                 errors.append(f"第 {line_number} 行：{label} 不能为空")
+            elif has_generic_reference(value):
+                errors.append(f"第 {line_number} 行：{label} 使用了非自包含占位表达: {value}")
         if any(word in testpoint for word in HARD_STEP_WORDS):
             errors.append(f"第 {line_number} 行：测试点存在用例化表达: {testpoint}")
         if any(word in testpoint for word in SOFT_STEP_WORDS):
             warnings.append(f"第 {line_number} 行：请检查疑似步骤化表达: {testpoint}")
+        if any(word in testpoint for word in METHOD_ARTIFACT_WORDS):
+            errors.append(f"第 {line_number} 行：测试点泄漏测试设计方法或方法产物: {testpoint}")
         if len(testpoint) < 10:
             warnings.append(f"第 {line_number} 行：测试点可能过短，需体现被测对象和验证特性")
 
@@ -241,6 +319,13 @@ def main() -> int:
                 for label, value in [("接口名称", name), ("接口请求方式", request), ("接口测试类型", test_type)]:
                     if not value:
                         errors.append(f"第 {line_number} 行：{label} 不能为空")
+                    elif has_generic_reference(value):
+                        errors.append(f"第 {line_number} 行：{label} 使用了非自包含占位表达: {value}")
+                for interface_type_name in split_type_names(test_type):
+                    if interface_type_name not in allowed_type_values:
+                        errors.append(
+                            f"第 {line_number} 行：接口测试类型不在基础测试类型知识库中: {interface_type_name}"
+                        )
     elif "## 4. 接口测试清单" in text:
         errors.append("接口测试清单为空，若无接口测试对象需填写“不适用”")
 
@@ -263,13 +348,17 @@ def main() -> int:
         if test_id != expected:
             errors.append(f"第 {line_number} 行：期望接口测试点 ID {expected}，实际 {test_id}")
         expected_itp_id += 1
-        if (category, subtype) not in ALLOWED_CATEGORY_PAIRS:
+        if (category, subtype) not in allowed_category_pairs:
             errors.append(f"第 {line_number} 行：非法接口大类/子类组合 {category}/{subtype}")
         for label, value in [("接口测试点", testpoint), ("风险/备注", risk_note)]:
             if not value:
                 errors.append(f"第 {line_number} 行：{label} 不能为空")
+            elif has_generic_reference(value):
+                errors.append(f"第 {line_number} 行：{label} 使用了非自包含占位表达: {value}")
         if any(word in testpoint for word in HARD_STEP_WORDS):
             errors.append(f"第 {line_number} 行：接口测试点存在用例化表达: {testpoint}")
+        if any(word in testpoint for word in METHOD_ARTIFACT_WORDS):
+            errors.append(f"第 {line_number} 行：接口测试点泄漏测试设计方法或方法产物: {testpoint}")
 
     if QUESTION_HEADER in text:
         for line_number, cells in collect_table(lines, QUESTION_HEADER):
@@ -293,6 +382,8 @@ def main() -> int:
         item, satisfied, note = cells
         if not item or not satisfied or not note:
             errors.append(f"第 {line_number} 行：自检表存在空字段")
+        if has_generic_reference(note):
+            errors.append(f"第 {line_number} 行：自检说明使用了非自包含占位表达: {note}")
         if satisfied not in {"是", "否", "不适用", "部分满足"}:
             warnings.append(f"第 {line_number} 行：自检结果建议使用 是/否/不适用/部分满足")
 

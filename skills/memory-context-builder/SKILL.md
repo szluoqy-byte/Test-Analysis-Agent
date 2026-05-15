@@ -38,7 +38,7 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 
 ## 输出
 
-创建或刷新 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`，包含：
+创建或刷新 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`，包含：
 
 - 与本次需求相关的项目背景。
 - 领域术语片段。
@@ -71,5 +71,5 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 - 不把 `context-pack.md` 作为“最新全局上下文”复用给后续任务；后续任务必须重新按需求筛选或显式复用当前 run。
 - 未经用户明确确认，不更新 memory 源文件。
 - 本 skill 不直接触发 `AskUserQuestion`；只向 `clarification-gate` 提供候选。
-- `context-pack.md` 是当前 run 的运行产物，不写入 `memory/`，也不作为长期 memory 源文件。
+- `process/context-pack.md` 是当前 run 的运行产物，不写入 `memory/`，也不作为长期 memory 源文件。
 - 不允许在 skill 文件目录、插件缓存目录或 `.claude-plugin/` 目录下创建 `outputs/runs/`。

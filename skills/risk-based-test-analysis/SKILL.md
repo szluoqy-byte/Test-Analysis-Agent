@@ -7,6 +7,12 @@ description: 当需要按产品、业务、数据、权限、集成、运维和�
 
 本 skill 用来判断“哪里失败代价最高，哪里应该优先测”。
 
+## 职责边界
+
+- 本 skill 只产出风险方法证据、风险登记和级别建议，供 `testpoint-generation` 给测试点定级和补充风险备注。
+- 风险评分、失败模式和历史缺陷信号是优先级依据，不直接变成用例设计模式、用例数量或执行步骤。
+- 后续独立测试设计项目会基于主交付件决定用例展开方式；本 skill 不写测试用例。
+
 ## 输入
 
 - 结构化需求模型。
@@ -20,7 +26,7 @@ description: 当需要按产品、业务、数据、权限、集成、运维和�
 
 - 使用 `knowledge/expert-rules.md` 判断风险覆盖方向。
 - 使用 `knowledge/defect-patterns.md` 匹配通用缺陷模式。
-- 使用 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md` 中的项目历史缺陷和项目风险模式修正关注点。
+- 使用 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md` 中的项目历史缺陷和项目风险模式修正关注点。
 - 使用 `knowledge/risk-level-rules.md` 判断建议级别，级别定义仍以 `knowledge/testpoint-standard.md` 为准。
 
 风险识别必须区分三类来源：
@@ -58,3 +64,4 @@ description: 当需要按产品、业务、数据、权限、集成、运维和�
 - 合理但未明确的风险，标记为“待确认”或“风险确认点”。
 - 不直接调用 `AskUserQuestion`。
 - 不把风险等级当作测试点数量的唯一依据；高风险需要更强证据或更明确覆盖对象。
+- 最终设计输入中只保留可追踪到需求、memory 或风险确认点的风险备注；不把通用风险推断写成已确认业务规则。

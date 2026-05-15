@@ -1,6 +1,6 @@
 ---
 name: coverage-review
-description: 在测试点生成后使用，用于执行覆盖审查、需求追踪检查、方法应用检查、风险级别检查、输出结构检查和非用例化检查。
+description: 在测试用例设计输入生成后使用，用于执行覆盖审查、需求追踪检查、方法应用检查、风险级别检查、输出结构检查和非用例化检查。
 ---
 
 # 覆盖审查 Skill
@@ -11,7 +11,10 @@ description: 在测试点生成后使用，用于执行覆盖审查、需求追�
 
 - 已生成的测试用例设计输入。
 - 如有过程报告，读取其中的测试点映射、方法路由和方法证据。
-- 测试方法路由表。
+- `knowledge/test-analysis-methodology.md`。
+- `knowledge/test-scenario-point-case-boundary.md`。
+- `knowledge/basic-test-types.md`。
+- 测试分析维度与方法路由表。
 - 方法分析证据摘要。
 - 结构化需求模型。
 - 待确认问题。
@@ -26,10 +29,10 @@ description: 在测试点生成后使用，用于执行覆盖审查、需求追�
 4. 执行 `method-application-check.md`。
 5. 执行 `risk-priority-check.md`。
 6. 执行 `output-schema-check.md`。
-7. 执行 `testcase-design-input-check.md`。
+7. 执行 `testcase-design-input-check.md`，重点检查场景/条件/测试点/用例边界、测试类型合法性，以及设计方法是否泄漏到主输出。
 8. 执行 `semantic-quality-check.md`。
-9. 如果测试用例设计输入文件已生成，运行 `bin/lint-testcase-design-input.py <设计输入路径>` 做确定性结构校验。
-10. 如果过程分析报告已生成，运行 `bin/lint-testpoint-report.py <报告路径>` 和 `bin/semantic-testpoint-check.py <报告路径>` 做过程报告校验。
+9. 如果测试用例设计输入文件已生成，运行 `bin/lint-testcase-design-input.py ${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md` 做确定性结构校验。
+10. 如果过程分析报告已生成，运行 `bin/lint-testpoint-report.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 和 `bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 做过程报告校验。
 11. 使用 `knowledge/expert-review-rubric.md` 进行专家评分。
 12. 列出通过、警告和失败项。
 13. 对阻断报告发布且无法通过修正测试点解决的问题，登记 `CP-REVIEW` 澄清候选。
@@ -45,7 +48,7 @@ description: 在测试点生成后使用，用于执行覆盖审查、需求追�
 
 失败项分两类处理：
 
-- 输出质量失败：例如表结构不合规、测试点用例化、重复严重、场景条件缺失、类型不在设计输入模板定义内。必须修正输出后重新审查。
+- 输出质量失败：例如表结构不合规、测试点用例化、重复严重、场景条件缺失、类型不在 `knowledge/basic-test-types.md` 定义内，或设计方法泄漏到主输出。必须修正输出后重新审查。
 - 需求信息缺失：例如核心规则、终态、权限范围或接口契约无法确认。登记 `CP-REVIEW` 澄清候选；若未触发交互，保留为最终待确认问题。
 
 ## 输出
@@ -56,8 +59,10 @@ description: 在测试点生成后使用，用于执行覆盖审查、需求追�
 
 - 每个 quality gate 的结果和失败/警告项。
 - 必选方法是否都有测试点或待确认问题承接。
+- 适用分析维度是否都落到主交付件，且没有只停留在过程报告中。
 - 测试点是否保持非用例化。
 - 需求依据和方法证据是否可追踪。
+- 专项分析方法是否只保留在过程报告中，主设计输入是否没有边界值清单、等价类清单、判定表、组合矩阵或状态迁移矩阵。
 - 专家评分和未达标维度。
 - 需要回传给 `clarification-gate` 的 `CP-REVIEW` 候选。
 

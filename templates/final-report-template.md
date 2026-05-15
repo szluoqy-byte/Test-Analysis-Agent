@@ -26,10 +26,10 @@
 | 问题ID | 检查点 | 问题 | 用户回答/未触发原因 | 处理方式 | 关联需求依据 |
 |---|---|---|---|---|---|
 
-## 5. 测试方法路由
+## 5. 测试分析维度与方法路由
 
-| 需求片段 | 触发信号 | 适用方法 | 调用 skill | 必要性 | 置信度 | 说明 |
-|---|---|---|---|---|---|---|
+| 需求片段 | 分析维度 | 触发信号 | 适用方法 | 调用 skill | 必要性 | 置信度 | 说明 |
+|---|---|---|---|---|---|---|---|
 
 ## 6. 方法分析证据摘要
 
@@ -62,3 +62,10 @@
 | 类型 | 建议写入位置 | 内容 | 依据 | 是否需人工确认 |
 |---|---|---|---|---|
 ```
+
+## 落盘规则
+
+- 本报告路径固定为 `${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md`。
+- 主交付件路径固定为 `${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md`。
+- 过程文件路径固定为 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md` 和 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/clarification-session.md`。
+- 本报告可包含测试点明细、方法证据和质量门禁结果；不要再额外生成 `<需求文件名安全短名>.test-points.md`。

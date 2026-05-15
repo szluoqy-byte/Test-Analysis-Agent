@@ -68,7 +68,7 @@
 
 ## 第 6 轮独立测试点明细产物
 
-- 增加独立测试点明细落盘要求：`outputs/testpoint-details/<需求文件名>.testpoint-details.md`。
+- 增加独立测试点明细落盘要求；该早期独立目录方案已在第 14 轮被 `legacy/testpoint-details.md` 取代。
 - 该轮完整报告仍保留 `## 6. 测试点明细`，独立明细文件仅保留测试点表和必要元信息；第 12 轮引入方法证据摘要后，测试点明细调整为 `## 7. 测试点明细`。
 - 更新主入口 skill、编排 Agent、测试点生成 skill、覆盖审查 skill、模板、质量门禁和设计文档。
 - 扩展确定性 lint，使其同时支持完整报告和独立测试点明细文件。
@@ -89,10 +89,10 @@
 
 ## 第 9 轮 Memory 精简设计
 
-- 将 memory 从 `global/project/context-packs` 多层结构收敛为 `project-memory.md`、`testing-experience-memory.md` 和 `latest-context-pack.md`。
+- 将 memory 从 `global/project/context-packs` 多层结构收敛为 `project-memory.md`、`testing-experience-memory.md` 和早期上下文快照方案。
 - 明确 Memory 的定义：经人工确认、会影响后续分析的项目上下文和测试经验。
 - 明确 Memory 不保存通用测试理论、未确认业务规则和单次运行完整中间产物。
-- 更新 `memory-context-builder`，只从两个长期 memory 文件中筛选相关内容，运行时只注入 `latest-context-pack.md`。
+- 更新 `memory-context-builder`，只从两个长期 memory 文件中筛选相关内容，运行时只注入本次筛选出的上下文快照。
 - 更新记忆更新建议模板和示例报告中的写入位置。
 
 ## 第 10 轮 Knowledge / Skills / Memory 边界清理
@@ -131,14 +131,14 @@
 - 新增 `memory/domains/` 业务域分片目录，支持按业务域维护术语、角色权限、接口约定、数据约定和设计约束。
 - 更新 `memory-context-builder`，要求先读项目 Memory 索引，再按需求关键词选择相关业务域分片。
 - 新增 `skills/clarification-gate/SKILL.md`，在多个检查点收集、去重、分级和限流澄清候选问题。
-- 新增 `templates/clarification-template.md` 和 `outputs/clarifications/`，记录 AskUserQuestion 问题队列、用户回答和本次上下文补充。
+- 新增 `templates/clarification-template.md`，澄清会话记录写入当前 run 的 `process/clarification-session.md`。
 - 更新主入口 skill、编排 Agent、最终报告模板、质量门禁和检查脚本，使交互澄清成为正式流程环节。
 - `AskUserQuestion` 只在主会话中触发，不交给 subagent 内部处理；用户回答默认只作用于本次分析，不自动写入长期 memory。
 - 调整交互策略为按优先级确认：`P0/MustAsk` 必问，`P1/ShouldAsk` 建议问，整次分析建议 5 到 10 个确认项。
 - 最终报告的“待确认问题”在交互澄清后刷新，只保留未解决问题，避免已回答问题重复出现在终稿中。
 - 新增 `.editorconfig` 和 `.gitattributes`，固定文本文件使用 UTF-8 与稳定换行，降低 Windows 环境下编码和换行漂移风险。
 - 将运行产物从按需求文件名固定落盘调整为 `outputs/runs/<run-id>/` 运行目录，避免多次执行或同名需求互相覆盖。
-- 移除全局 `memory/latest-context-pack.md`，上下文包只作为 `outputs/runs/<run-id>/context-pack.md` 运行产物存在，避免“最近一次运行”语义污染当前任务。
+- 移除全局 latest context pack 文件，上下文包只作为 `outputs/runs/<run-id>/process/context-pack.md` 运行产物存在，避免“最近一次运行”语义污染当前任务。
 - 新增 `PROJECT_ROOT` 解析和输出路径硬约束，避免 Claude Code 以 skill 工作目录为基准时把 `outputs/runs` 写入 skill 或插件缓存目录。
 - 将 `PROJECT_ROOT` 规则简化为当前 Claude Code 会话工作目录，需求文档路径只用于读取需求，不再向上查找或反推项目根。
 - 收紧 `clarification-gate` 触发规则：`P0/MustAsk` 必问、`P1/ShouldAsk` 应问，`CP-REQUIREMENT` 后存在重要候选但未触发时必须记录明确原因。
@@ -149,9 +149,19 @@
 - 细化 Knowledge 层内容：补强测试点类型/方法选择规则、方法证据最低颗粒度、覆盖分类判定表、缺陷模式、风险评分启发、Oracle 强度、专家审视顺序和评分细则。
 - 细化 Skill 层内容：补强主入口阶段契约、run-id 复用规则、澄清候选排序与降级、memory 自动扫描裁剪、需求模型输出字段、方法路由判定、专项方法证据/澄清候选输出、测试点合并规则和覆盖审查失败处理。
 
+## 第 14 轮输出产物收敛
+
+- 新增 `docs/output-artifact-contract.md`，明确运行目录下按 `deliverables/`、`process/`、`reports/`、`legacy/` 分类落盘。
+- 主交付件固定为 `outputs/runs/<run-id>/deliverables/testcase-design-input.md`，作为后续独立 Design 项目的唯一默认输入。
+- 过程上下文固定为 `process/context-pack.md`，澄清记录固定为 `process/clarification-session.md`，过程报告固定为 `reports/test-analysis-report.md`。
+- 兼容旧流程的测试点明细只允许写入 `legacy/testpoint-details.md`，不再默认生成按需求名变化的 `.test-points.md` 或 `.testpoint-details.md` 文件。
+- 更新主入口 skill、编排 Agent、模板、质量门禁、memory 文档和 smoke 脚本，避免不同模型或环境生成不同文件名影响下游消费。
+
 ## 当前验收标准
 
 - 最终报告包含测试方法路由表。
+- 默认运行产物必须符合 `docs/output-artifact-contract.md`。
+- 下游 Design 项目只依赖 `outputs/runs/<run-id>/deliverables/testcase-design-input.md`。
 - 测试方法路由表包含 `必要性` 和 `置信度`。
 - 每个 `必选` 方法至少生成一条 `ME-*` 方法分析证据，并关联测试点或待确认问题。
 - 每个 `必选` 方法至少生成一个测试点，或输出一个明确解释缺口的待确认问题。

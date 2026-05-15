@@ -2,7 +2,7 @@
 
 ## 目的
 
-确保主输出结构稳定、可被下游 Test-Design-Agent 消费，并能支持后续工具化处理。
+确保主输出结构稳定、可被后续独立测试设计项目消费，并能支持后续工具化处理。
 
 ## 主输出必需章节
 
@@ -42,10 +42,11 @@
 - `场景 ID` 符合 `SC-001` 格式并按顺序递增。
 - 场景测试点 `测试点 ID` 符合 `TP-001` 格式并按顺序递增。
 - 接口测试点 `测试点 ID` 符合 `ITP-001` 格式并按顺序递增。
-- 场景测试点 `大类/子类` 和接口测试点 `大类/子类` 必须来自 `templates/testcase-design-input-template.md` 的类型定义。
+- 场景测试点 `大类/子类` 和接口测试点 `大类/子类` 必须来自 `knowledge/basic-test-types.md` 的类型定义。
 - 场景测试点 `级别` 必须来自 `Level 0` 到 `Level 4`。
 - 除非明确标记为 `待确认` 或 `不适用`，否则必填字段不能为空。
 - `待确认信息` 必须是交互澄清后的未解决问题集合，不保留已回答、已覆盖、重复或空白问题。
+- 主输出不得用“见原始需求”“按需求实现”“同上”等占位替代后续设计必须知道的信息。
 
 ## 过程分析报告
 
@@ -55,7 +56,7 @@
 - `## 2. 记忆上下文包摘要`
 - `## 3. 需求结构化摘要`
 - `## 4. 交互澄清摘要`
-- `## 5. 测试方法路由`
+- `## 5. 测试分析维度与方法路由`，兼容历史标题 `## 5. 测试方法路由`
 - `## 6. 方法分析证据摘要`
 - `## 7. 待确认问题`
 - `## 8. 测试点明细`
@@ -68,9 +69,12 @@
 
 - 每次运行必须先将当前 Claude Code 会话工作目录固定为 `PROJECT_ROOT`，再创建独立目录 `${PROJECT_ROOT}/outputs/runs/<run-id>/`。
 - 不得从需求文档路径向上查找或反推 `PROJECT_ROOT`。
-- 测试用例设计输入路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testcase-design-input.md`。
-- 过程分析报告路径建议是 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-analysis-report.md`。
-- 澄清会话路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/clarification-session.md`。
-- 上下文包快照路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
+- 运行目录下必须按类别写入固定文件名，不得使用模型自行生成的文件名。
+- 测试用例设计输入路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md`，这是唯一默认跨项目交付件。
+- 上下文包快照路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`。
+- 澄清会话路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/clarification-session.md`，仅在发生澄清或需要记录未触发原因时生成。
+- 过程分析报告路径建议是 `${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md`。
+- 兼容旧流程的测试点明细仅可写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/legacy/testpoint-details.md`，不得默认生成。
+- 默认不得生成 `<需求文件名安全短名>.test-points.md`、`<需求文件名安全短名>.testpoint-details.md` 或其他同义文件。
 - 报告可额外展示相对路径 `outputs/runs/<run-id>/...`，但实际文件不得写入 skill 目录、插件缓存目录或 `.claude-plugin/` 目录。
 - 不允许使用只含需求文件名的固定路径覆盖历史运行产物。

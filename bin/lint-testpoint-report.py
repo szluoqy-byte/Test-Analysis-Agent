@@ -73,6 +73,11 @@ VAGUE_TESTPOINTS = {
     "验证接口正常",
 }
 
+ROUTE_SECTION_ALIASES = {
+    "## 5. 测试方法路由": "## 5. 测试分析维度与方法路由",
+    "## 4. 测试方法路由": "## 4. 测试分析维度与方法路由",
+}
+
 
 def split_row(line: str) -> list[str]:
     return [cell.strip() for cell in line.strip().strip("|").split("|")]
@@ -118,6 +123,10 @@ def collect_evidence_rows(lines: list[str]) -> list[tuple[int, list[str]]]:
     return rows
 
 
+def has_required_section(text: str, section: str) -> bool:
+    return section in text or ROUTE_SECTION_ALIASES.get(section, "") in text
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print("用法: lint-testpoint-report.py <报告.md>", file=sys.stderr)
@@ -141,7 +150,7 @@ def main() -> int:
         if section == "# ":
             if not lines or not lines[0].startswith("# "):
                 errors.append("缺少 Markdown 一级标题")
-        elif section not in text:
+        elif not has_required_section(text, section):
             errors.append(f"缺少必需章节: {section}")
 
     if TESTPOINT_HEADER not in text:

@@ -2,7 +2,7 @@
 
 ## 1. 文档目的
 
-本文描述测试分析 Agent 的系统架构、运行流程、组件职责和质量闭环。该 Agent 面向 Markdown 需求文档，目标是模拟测试专家的分析过程，输出下游 Test-Design-Agent 可直接消费的“测试用例设计输入”，而不是测试用例、测试步骤或自动化脚本。
+本文描述测试分析 Agent 的系统架构、运行流程、组件职责和质量闭环。该 Agent 面向 Markdown 需求文档，目标是模拟测试专家的分析过程，输出后续独立测试设计项目可直接消费的“测试用例设计输入”，而不是测试用例、测试步骤或自动化脚本。
 
 设计优先适配 Claude Code plugin / skills / subagents 体系，同时保持核心知识、方法和模板平台无关，后续可增加 OpenClaw 适配层。
 
@@ -12,10 +12,11 @@
 
 - 输入单个 Markdown 需求文档。
 - 解析需求并形成结构化需求模型。
-- 基于测试理论选择合适分析方法，包括风险驱动、边界值、等价类、状态迁移、决策表、场景流、权限矩阵、接口契约、数据一致性和组合兼容。
+- 基于测试分析维度选择合适分析方法，包括需求可测性、风险、业务场景、数据域、规则组合、状态、权限、接口契约、数据一致性、组合兼容和非功能质量属性。
 - 为每种必选测试方法输出 `ME-*` 方法分析证据，证明测试理论被实际应用。
 - 结合 memory 注入项目上下文、历史缺陷、测试经验和输出偏好。
 - 输出按测试场景组织、包含共用条件和测试点的设计输入。
+- 输出交付件必须自包含，后续独立测试设计项目只读取该文件也能开展用例设计。
 - 可选保留中等粒度、可评审、可追踪的过程分析报告。
 - 通过质量门禁和确定性 lint 做自我审查。
 
@@ -31,7 +32,7 @@
 
 | 原则 | 说明 |
 |---|---|
-| 测试方法显式化 | 每个需求片段先经过方法路由和方法证据沉淀，再生成测试点 |
+| 分析维度显式化 | 每个需求片段先识别测试分析维度，再经过方法路由和方法证据沉淀，最后生成设计输入 |
 | 方法证据可追踪 | 每个必选测试方法都应产出 `ME-*` 证据，或输出待确认问题解释缺口 |
 | 专家经验可维护 | 测试标准、缺陷模式、覆盖分类、判定依据使用 Markdown 知识包维护 |
 | 记忆可控注入 | 每次分析只生成相关记忆上下文包，不全量注入 memory |
@@ -98,10 +99,15 @@ test-analysis-agent/
 └── outputs/
     └── runs/
         └── <run-id>/
-            ├── context-pack.md
-            ├── clarification-session.md
-            ├── <需求文件名安全短名>.testcase-design-input.md
-            └── <需求文件名安全短名>.test-analysis-report.md
+            ├── deliverables/
+            │   └── testcase-design-input.md
+            ├── process/
+            │   ├── context-pack.md
+            │   └── clarification-session.md
+            ├── reports/
+            │   └── test-analysis-report.md
+            └── legacy/                  # 按需
+                └── testpoint-details.md
 ```
 
 ### 5.1 目录职责
@@ -167,7 +173,7 @@ bin = 对报告结构和非用例化约束做机械校验
 
 | 层 | 放什么 | 不放什么 | 典型文件 |
 |---|---|---|---|
-| Knowledge | 通用测试理论、框架术语、测试点标准、缺陷模式、方法路由矩阵、覆盖分类、专家评分标准 | 项目事实、临时偏好、单次运行结果、未确认业务规则 | `knowledge/domain-glossary.md`、`knowledge/testpoint-standard.md`、`knowledge/defect-patterns.md` |
+| Knowledge | 通用测试理论、分析维度、框架术语、测试点标准、缺陷模式、方法路由矩阵、覆盖分类、专家评分标准 | 项目事实、临时偏好、单次运行结果、未确认业务规则 | `knowledge/test-analysis-methodology.md`、`knowledge/domain-glossary.md`、`knowledge/testpoint-standard.md` |
 | Skills | 触发条件、输入、分析步骤、输出格式引用、质量检查顺序 | 长篇理论定义、通用缺陷清单、级别定义、项目事实 | `skills/testing-method-router/SKILL.md`、`skills/testpoint-generation/SKILL.md` |
 | Memory | 经人工确认的项目事实、项目专属术语、业务域约定、输出偏好、项目历史缺陷、项目反馈教训 | 通用测试理论、框架术语、通用缺陷模式、方法步骤、未确认假设 | `memory/project-memory.md`、`memory/domains/*.md`、`memory/testing-experience-memory.md` |
 | Templates | Markdown 结构、字段占位、最小示例和产物布局 | 标准枚举的独立定义、项目事实、执行流程 | `templates/testcase-design-input-template.md`、`templates/final-report-template.md` |
@@ -186,7 +192,7 @@ flowchart TD
   C --> C1["CP-MEMORY\nclarification-gate"]
   C1 --> D["结构化需求分析\nrequirement-testability"]
   D --> C2["CP-REQUIREMENT\nclarification-gate"]
-  C2 --> E["测试方法路由\ntesting-method-router"]
+  C2 --> E["测试分析维度与方法路由\ntesting-method-router"]
   E --> C3["CP-ROUTING\nclarification-gate"]
   C3 --> F["专项测试方法分析\n风险 / 边界 / 状态 / 决策表 / 权限 / 接口 / 数据 / 兼容 / 可观测性"]
   F --> EV["方法分析证据\nME-*"]
@@ -248,7 +254,7 @@ sequenceDiagram
     C-->>E: 记录未触发原因并继续
   end
   E->>T: 为需求片段选择测试理论方法
-  T-->>E: 测试方法路由表 / 置信度 / 范围澄清候选
+  T-->>E: 分析维度与方法路由表 / 置信度 / 范围澄清候选
   E->>C: CP-ROUTING 处理高优先范围类候选
   E->>S: 调用必要专项方法并生成 ME-* 证据
   S-->>E: 方法分析证据 / 方法缺口澄清候选
@@ -263,13 +269,14 @@ sequenceDiagram
   E-->>U: 测试用例设计输入 / 过程分析报告 / memory 更新建议
 ```
 
-## 9. 测试方法路由架构视图
+## 9. 测试分析维度与方法路由架构视图
 
-测试方法路由是系统替代测试专家的核心。它负责把需求信号映射到测试理论，而不是让模型直接泛化生成测试点。
+测试分析维度与方法路由是系统替代测试专家的核心。它先判断需求片段需要从哪些分析维度审视，再把需求信号映射到测试理论，而不是让模型直接泛化生成测试点。
 
 ```mermaid
 flowchart LR
-  Req["结构化需求片段"] --> Signal["识别触发信号"]
+  Req["结构化需求片段"] --> Dimension["识别分析维度"]
+  Dimension --> Signal["识别触发信号"]
   Signal --> Router["测试方法路由"]
 
   Router --> Risk["风险驱动"]
@@ -298,18 +305,18 @@ flowchart LR
 
 ### 9.1 路由矩阵摘要
 
-| 需求信号 | 测试方法 | 对应 skill | 路由输出 |
-|---|---|---|---|
-| 范围、阈值、枚举、格式、数量、时间窗口 | 边界值、等价类 | `boundary-equivalence-analysis` | 必要性、置信度、说明 |
-| 生命周期、工作流、审批、取消、重试、超时 | 状态迁移 | `state-transition-analysis` | 必要性、置信度、说明 |
-| 多条件共同决定结果 | 决策表 | `decision-table-analysis` | 必要性、置信度、说明 |
-| 主流程、备选流程、异常流程、端到端旅程 | 场景流 | `scenario-flow-analysis` | 必要性、置信度、说明 |
-| 角色、租户、数据范围、归属、审批权限 | 权限矩阵 | `permission-role-analysis` | 必要性、置信度、说明 |
-| API、字段、响应、错误码、回调、外部系统 | 接口契约 | `interface-contract-analysis` | 必要性、置信度、说明 |
-| 库存、缓存、统计、导出、日志、异步同步 | 数据一致性 | `data-consistency-analysis` | 必要性、置信度、说明 |
-| 多平台、多版本、多配置、多渠道、feature flag | 组合兼容 | `combinatorial-compatibility-analysis` | 必要性、置信度、说明 |
-| 日志、审计、告警、人工恢复、运维可见性 | 可观测性审计 | `risk-based-test-analysis`、`testpoint-generation` | 必要性、置信度、说明 |
-| 资金、安全、不可逆、历史缺陷、高用户影响 | 风险驱动 | `risk-based-test-analysis` | 必要性、置信度、说明 |
+| 分析维度 | 需求信号 | 测试方法 | 对应 skill | 路由输出 |
+|---|---|---|---|---|
+| 数据域与边界 | 范围、阈值、枚举、格式、数量、时间窗口 | 边界值、等价类 | `boundary-equivalence-analysis` | 必要性、置信度、说明 |
+| 状态与生命周期 | 生命周期、工作流、审批、取消、重试、超时 | 状态迁移 | `state-transition-analysis` | 必要性、置信度、说明 |
+| 业务规则组合 | 多条件共同决定结果 | 决策表 | `decision-table-analysis` | 必要性、置信度、说明 |
+| 业务场景与流程 | 主流程、备选流程、异常流程、端到端旅程 | 场景流 | `scenario-flow-analysis` | 必要性、置信度、说明 |
+| 权限与数据范围 | 角色、租户、数据范围、归属、审批权限 | 权限矩阵 | `permission-role-analysis` | 必要性、置信度、说明 |
+| 接口与契约 | API、字段、响应、错误码、回调、外部系统 | 接口契约 | `interface-contract-analysis` | 必要性、置信度、说明 |
+| 数据一致性 | 库存、缓存、统计、导出、日志、异步同步 | 数据一致性 | `data-consistency-analysis` | 必要性、置信度、说明 |
+| 组合与兼容 | 多平台、多版本、多配置、多渠道、feature flag | 组合兼容 | `combinatorial-compatibility-analysis` | 必要性、置信度、说明 |
+| 非功能质量属性 | 日志、审计、告警、人工恢复、运维可见性 | 可观测性审计 | `risk-based-test-analysis`、`testpoint-generation` | 必要性、置信度、说明 |
+| 风险与优先级 | 资金、安全、不可逆、历史缺陷、高用户影响 | 风险驱动 | `risk-based-test-analysis` | 必要性、置信度、说明 |
 
 ## 10. Memory 设计
 
@@ -322,7 +329,7 @@ Memory 是 Agent 在多次需求分析之间保留的、经人工确认的项目
 - 项目事实：业务模块、角色、项目专属术语、接口约定、数据对象、输出偏好。
 - 测试经验：项目历史缺陷、已确认风险模式、评审反馈、团队测试习惯。
 
-本次上下文包是从长期 memory 中筛选出的运行产物，写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`，不属于长期 Memory。
+本次上下文包是从长期 memory 中筛选出的运行产物，写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`，不属于长期 Memory。
 
 Memory 不保存：
 
@@ -348,7 +355,7 @@ memory/
 | `domains/*.md` | 保存用户自定义业务域的术语、角色权限、接口/数据约定和设计约束 | 用户确认后人工追加；新增分片自动扫描，无需登记索引 |
 | `testing-experience-memory.md` | 保存项目历史缺陷、项目风险模式、评审反馈和团队测试习惯 | 用户确认后人工追加 |
 
-运行时上下文包写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`，不放在 `memory/` 目录中。
+运行时上下文包写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`，不放在 `memory/` 目录中。
 
 ### 10.3 记忆注入与更新视图
 
@@ -358,7 +365,7 @@ flowchart TD
   Domains["domains/*.md\n业务域术语 / 约定 / 约束"] --> Select
   Experience["testing-experience-memory.md\n历史缺陷 / 风险模式 / 反馈教训"] --> Select
   Requirement["当前需求文档\n标题 / 模块 / 关键词 / 业务对象"] --> Select
-  Select --> Pack["${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md\n本次记忆上下文包"]
+  Select --> Pack["${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md\n本次记忆上下文包"]
   Pack --> Analysis["需求分析 / 方法路由 / 测试点生成"]
   Analysis --> Proposal["建议沉淀的记忆更新"]
   Proposal --> Confirm{"用户是否确认"}
@@ -373,7 +380,7 @@ flowchart TD
 1. 运行开始时，先读取 `project-memory.md` 的全局内容。
 2. 自动扫描 `domains/*.md`，跳过 `README.md`，根据需求标题、模块、角色、业务对象、状态、接口、关键词和分片自身元信息选择相关分片。
 3. 同时检索 `testing-experience-memory.md` 中与本次需求相关的项目经验。
-4. 只摘取与本次需求直接相关的内容，生成 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
+4. 只摘取与本次需求直接相关的内容，生成 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`。
 5. 需求分析、方法路由、测试点生成和覆盖审查只读取当前 run 的 `context-pack.md`，避免长期 memory 全量注入。
 6. 过程分析报告输出“建议沉淀的 Memory 更新”，说明建议写入哪个长期文件或业务域分片、依据是什么。
 7. 只有用户明确确认后，才把建议追加到 `project-memory.md`、`domains/*.md` 或 `testing-experience-memory.md`。
@@ -392,7 +399,7 @@ flowchart TD
 flowchart LR
   A["需求文档 .md"] --> B["记忆上下文包"]
   B --> C["结构化需求模型"]
-  C --> D["测试方法路由表"]
+  C --> D["测试分析维度与方法路由表"]
   D --> E["专项方法分析结果"]
   E --> EV["方法分析证据摘要"]
   EV --> F["测试用例设计输入"]
@@ -400,7 +407,7 @@ flowchart LR
   G --> H["质量门禁结果"]
   H --> I["专家评审评分"]
   I --> J["过程分析报告"]
-  F --> DTL["下游设计输入文件"]
+  F --> DTL["后续设计输入文件"]
   B --> CQ["澄清候选队列"]
   C --> CQ
   D --> CQ
@@ -419,7 +426,7 @@ flowchart LR
 | 结构化需求模型 | `requirement-testability` | 提取模块、规则、状态、接口、权限和待确认问题 |
 | 澄清候选队列 | 各阶段 skill | 记录不确定项、影响、阻塞级别、优先级和提问策略 |
 | 澄清会话产物 | `clarification-gate` | 记录 AskUserQuestion 问题队列、未触发原因、用户回答、已解决问题和刷新后的未解决待确认问题 |
-| 测试方法路由表 | `testing-method-router` | 决定每段需求使用哪些测试理论 |
+| 测试分析维度与方法路由表 | `testing-method-router` | 决定每段需求从哪些分析维度审视并使用哪些测试理论 |
 | 方法分析证据摘要 | 专项测试方法 skills | 证明测试理论被实际应用，并关联测试点或待确认问题 |
 | 测试用例设计输入 | `testpoint-generation` | 输出场景化测试点、场景测试条件、接口清单和接口测试点 |
 | 覆盖审查结果 | `coverage-review` | 判断覆盖是否充分 |
@@ -432,15 +439,20 @@ flowchart LR
 
 ```text
 ${PROJECT_ROOT}/outputs/runs/<run-id>/
-├── context-pack.md
-├── clarification-session.md
-├── <需求文件名安全短名>.testcase-design-input.md
-└── <需求文件名安全短名>.test-analysis-report.md
+├── deliverables/
+│   └── testcase-design-input.md
+├── process/
+│   ├── context-pack.md
+│   └── clarification-session.md
+├── reports/
+│   └── test-analysis-report.md
+└── legacy/                  # 按需
+    └── testpoint-details.md
 ```
 
-`run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。`context-pack.md` 是该 run 的上下文快照；当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件必须使用 `${PROJECT_ROOT}` 下的绝对路径。
+`run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。run 目录用于区分历史批次，run 内文件名必须固定，避免不同模型或环境生成不同文件名影响下游消费。`deliverables/testcase-design-input.md` 是唯一跨项目交付件；`process/context-pack.md` 是该 run 的上下文快照；`process/clarification-session.md` 只在发生澄清或需要记录未触发原因时生成；`reports/test-analysis-report.md` 是可选过程审查报告；`legacy/testpoint-details.md` 仅用于兼容旧流程，不默认生成。当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件必须使用 `${PROJECT_ROOT}` 下的绝对路径。
 
-不得在 `skills/`、`.claude-plugin/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。如果当前工作目录明显是这些禁止目录，必须先向用户确认正确工作目录，不得继续生成产物。下游 skill 不得重新解析、搜索或修正 `PROJECT_ROOT`。
+不得在 `skills/`、`.claude-plugin/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。如果当前工作目录明显是这些禁止目录，必须先向用户确认正确工作目录，不得继续生成产物。后续阶段不得重新解析、搜索或修正 `PROJECT_ROOT`。
 
 ## 12. 质量闭环视图
 
@@ -480,7 +492,7 @@ flowchart TD
 | `testpoint-not-testcase-check.md` | 是否误写成测试用例 |
 | `coverage-check.md` | 模块、主流程、异常、边界、状态、权限、接口、数据是否覆盖 |
 | `traceability-check.md` | 每条测试点是否有需求依据 |
-| `method-application-check.md` | 必选测试方法是否有测试点或待确认问题 |
+| `method-application-check.md` | 必选分析维度和测试方法是否有测试点或待确认问题 |
 | `risk-priority-check.md` | 高风险点是否被优先覆盖 |
 | `output-schema-check.md` | 设计输入章节、字段和级别是否合法 |
 | `semantic-quality-check.md` | 方法应用、风险备注、依据粒度和明细一致性是否达标 |
@@ -496,7 +508,7 @@ flowchart TD
 |---|---|
 | `test-analysis-orchestrator` | 可选端到端编排代理，连接记忆、需求分析、方法路由、测试点生成和审查；流程以主入口 skill 为准 |
 | `requirement-analysis-agent` | 结构化需求，识别可测性缺口和方法触发信号 |
-| `testpoint-generation-agent` | 基于测试方法生成测试点 |
+| `testpoint-generation-agent` | 基于分析维度和测试方法生成设计输入 |
 | `coverage-review-agent` | 执行覆盖审查、质量门禁和专家评分 |
 
 ### 13.2 Skills
@@ -516,12 +528,15 @@ flowchart TD
 
 | 文件 | 作用 |
 |---|---|
+| `test-analysis-methodology.md` | 定义测试分析与测试设计边界、分析维度和主交付件落点 |
+| `test-scenario-point-case-boundary.md` | 定义需求、测试场景、场景测试条件、测试点和测试用例的层级边界 |
+| `basic-test-types.md` | 定义设计输入使用的测试类型大类和子类 |
 | `expert-rules.md` | 稳定专家规则 |
 | `defect-patterns.md` | 结构化缺陷模式卡片 |
 | `risk-level-rules.md` | 风险级别判定规则 |
 | `method-evidence-standard.md` | 测试方法证据标准 |
 | `testpoint-standard.md` | 测试点标准 |
-| `test-method-routing-matrix.md` | 需求信号到测试方法映射 |
+| `test-method-routing-matrix.md` | 分析维度、需求信号到测试方法映射 |
 | `coverage-taxonomy.md` | 专家级覆盖分类 |
 | `test-oracle-heuristics.md` | 测试判定依据启发 |
 | `expert-review-rubric.md` | 专家评分标准 |
@@ -532,7 +547,7 @@ flowchart TD
 | 文件 | 作用 |
 |---|---|
 | `requirement-model-template.md` | 结构化需求模型模板 |
-| `testcase-design-input-template.md` | 下游 Test-Design-Agent 主输入模板 |
+| `testcase-design-input-template.md` | 后续独立测试设计项目主输入模板 |
 | `testpoint-output-template.md` | 兼容保留的独立测试点明细模板 |
 | `method-analysis-template.md` | 方法分析证据摘要模板 |
 | `clarification-template.md` | AskUserQuestion 澄清问题和会话产物模板 |
@@ -546,26 +561,28 @@ flowchart TD
 测试用例设计输入实际写入路径：
 
 ```text
-${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testcase-design-input.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md
 ```
 
 过程分析报告建议写入路径：
 
 ```text
-${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-analysis-report.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md
 ```
 
 澄清会话路径：
 
 ```text
-${PROJECT_ROOT}/outputs/runs/<run-id>/clarification-session.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/process/clarification-session.md
 ```
 
 上下文包快照路径：
 
 ```text
-${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md
 ```
+
+完整运行产物分类和固定命名规则见 `docs/output-artifact-contract.md`。
 
 测试用例设计输入结构：
 
@@ -581,7 +598,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md
 ## 7. 输入完整性自检
 ```
 
-`待确认信息` 必须在所有交互澄清完成后刷新，只保留下游设计可执行用例时必须知道的问题；已被用户回答、已被上下文覆盖或重复的问题不得出现在主输出中。
+`待确认信息` 必须在所有交互澄清完成后刷新，只保留后续设计可执行用例时必须知道的问题；已被用户回答、已被上下文覆盖或重复的问题不得出现在主输出中。
 
 场景测试点字段：
 
@@ -600,18 +617,19 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md
 
 ### 14.1 类型、方法和级别来源
 
-设计输入中的 `大类/子类` 以 `templates/testcase-design-input-template.md` 为准。内部分析使用的测试点类型、测试方法枚举、粒度要求、非用例化约束和 `Level 0` 到 `Level 4` 的级别定义，以 `knowledge/testpoint-standard.md` 为准。
+设计输入中的 `场景测试类型`、`大类/子类` 和 `接口测试类型` 以 `knowledge/basic-test-types.md` 为准；测试分析与测试设计边界、分析维度和主交付件落点以 `knowledge/test-analysis-methodology.md` 为准；场景、场景测试条件、测试点和测试用例边界以 `knowledge/test-scenario-point-case-boundary.md` 为准。内部分析使用的测试点类型、测试方法枚举、粒度要求、非用例化约束和 `Level 0` 到 `Level 4` 的级别定义，以 `knowledge/testpoint-standard.md` 为准。
 
 ## 15. 验收标准
 
 - 输入单个 Markdown 需求文档后，能输出测试用例设计输入。
 - 输出内容按测试场景组织，每个场景都有入口/触发方式、执行用户/角色、前置条件、测试数据因子和业务设计约束。
+- 主输出自包含，不依赖后续项目回读原始需求、过程报告、context-pack、memory 或 Analysis 项目文件。
 - 测试点不包含步骤化测试用例内容、具体测试数据或完整预期结果。
 - 每条测试点都有大类、子类、级别和风险备注，且 `测试点` 描述中体现被测对象、特定场景和验证特性。
 - 能体现风险、边界、等价类、状态、权限、接口、决策表、场景流、数据一致性和组合兼容等测试理论。
 - 能输出接口测试清单和接口测试详情，接口契约不混入页面或业务场景。
 - 能输出刷新后的待确认信息。
-- 过程分析报告能输出测试方法路由表、方法分析证据摘要、质量门禁结果、专家评分和建议沉淀的记忆更新项。
+- 过程分析报告能输出测试分析维度与方法路由表、方法分析证据摘要、质量门禁结果、专家评分和建议沉淀的记忆更新项。
 - 示例主输出可通过 `bin/lint-testcase-design-input.py`，示例过程报告可通过 `bin/lint-testpoint-report.py`、`bin/semantic-testpoint-check.py` 和 `bin/smoke-test-analysis.py`。
 
 ## 16. 当前假设

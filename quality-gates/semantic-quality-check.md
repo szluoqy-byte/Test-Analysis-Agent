@@ -2,16 +2,19 @@
 
 ## 目的
 
-检查设计输入是否真正支撑下游用例设计，并在过程报告中体现测试方法、风险分层和需求追踪，而不是只满足表格结构。
+检查设计输入是否真正支撑后续独立项目开展用例设计，并在过程报告中体现测试方法、风险分层和需求追踪，而不是只满足表格结构。
 
 ## 可机械检查项
 
 - 必选测试方法是否落到设计输入中的场景测试点/接口测试点，或是否有待确认问题解释缺口。
 - 必选测试方法是否有方法分析证据，或是否有待确认问题解释缺口。
-- 设计输入中的大类/子类是否来自 `templates/testcase-design-input-template.md`。
+- 适用的测试分析维度是否落到主交付件，而不是只留在过程报告。
+- 设计输入中的大类/子类是否来自 `knowledge/basic-test-types.md`。
+- 测试场景、场景测试条件、测试点是否符合 `knowledge/test-scenario-point-case-boundary.md` 的层级边界。
 - 过程报告中的测试点类型和方法是否来自 `knowledge/testpoint-standard.md`。
 - 高等级测试点是否有风险备注。
 - 过程报告与测试用例设计输入是否不冲突。
+- 设计输入是否自包含，是否把后续设计必须知道的业务规则、状态集合、角色权限、数据因子、接口契约和未解决问题写入主交付件。
 - 需求依据是否过于宽泛。
 - 风险备注是否过于泛化。
 - 方法证据是否使用 `ME-*` 格式并关联 `TP-*` 或 `Q-*`。
@@ -21,8 +24,8 @@
 ## 建议命令
 
 ```bash
-bin/lint-testcase-design-input.py ${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testcase-design-input.md
-bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-analysis-report.md
+bin/lint-testcase-design-input.py ${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md
+bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md
 bin/smoke-test-analysis.py
 ```
 
@@ -30,7 +33,10 @@ bin/smoke-test-analysis.py
 
 - 必选测试方法没有场景测试点或接口测试点承接，且没有待确认问题解释。
 - 必选测试方法没有方法证据，且没有待确认问题解释。
-- 设计输入中的大类/子类不在模板类型定义中。
+- 适用分析维度没有在需求信息、场景、场景条件、测试点、接口详情或待确认信息中体现。
+- 设计输入中的大类/子类不在 `knowledge/basic-test-types.md` 中。
+- 设计输入把测试设计方法、具体数据、步骤或完整预期提前写入测试点。
+- 设计输入依赖“见原始需求”“按需求实现”“同上”等泛化占位，导致后续设计项目无法只基于主交付件开展用例设计。
 - 过程报告和设计输入中的测试点表达冲突。
 - 质量门禁结果存在 `失败`。
 - 专家评分低于通过线或存在 0 分维度。

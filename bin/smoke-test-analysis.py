@@ -16,9 +16,13 @@ REQUIRED_FILES = [
     ".claude-plugin/plugin.json",
     "docs/test-analysis-agent-design.md",
     "docs/knowledge-skill-memory-boundaries.md",
+    "docs/output-artifact-contract.md",
     "skills/analyze-requirement-testpoints/SKILL.md",
     "skills/memory-context-builder/SKILL.md",
     "skills/clarification-gate/SKILL.md",
+    "knowledge/test-analysis-methodology.md",
+    "knowledge/basic-test-types.md",
+    "knowledge/test-scenario-point-case-boundary.md",
     "knowledge/method-evidence-standard.md",
     "knowledge/risk-level-rules.md",
     "knowledge/testpoint-standard.md",
@@ -37,6 +41,12 @@ REQUIRED_FILES = [
     "bin/lint-testcase-design-input.py",
     "bin/semantic-testpoint-check.py",
 ]
+FIXED_RUN_ARTIFACTS = {
+    ".testcase-design-input.md": ("deliverables/testcase-design-input.md",),
+    ".test-analysis-report.md": ("reports/test-analysis-report.md",),
+    ".test-points.md": ("reports/test-analysis-report.md",),
+    ".testpoint-details.md": ("legacy/testpoint-details.md",),
+}
 
 
 def collect_testpoint_table(path: Path) -> list[str]:
@@ -54,24 +64,41 @@ def collect_testpoint_table(path: Path) -> list[str]:
     return table
 
 
-def find_artifact(repo_root: Path, stem: str, suffix: str) -> Path:
+def iter_run_dirs(repo_root: Path, stem: str) -> list[Path]:
+    runs_root = repo_root / "outputs" / "runs"
+    if not runs_root.exists():
+        return []
+
+    run_dirs = [path for path in runs_root.iterdir() if path.is_dir()]
+    matched = [path for path in run_dirs if stem in path.name]
+    candidates = matched or run_dirs
+    return sorted(candidates, key=lambda path: path.stat().st_mtime, reverse=True)
+
+
+def find_artifact(repo_root: Path, stem: str, suffix: str, *, required: bool = True) -> Path | None:
     candidates = [
         repo_root / "examples" / "outputs" / f"{stem}{suffix}",
-        repo_root / "outputs" / "test-points" / f"{stem}{suffix}",
-        repo_root / "outputs" / "testpoint-details" / f"{stem}{suffix}",
     ]
     for candidate in candidates:
         if candidate.exists():
             return candidate
 
+    for run_dir in iter_run_dirs(repo_root, stem):
+        for relative in FIXED_RUN_ARTIFACTS.get(suffix, ()):
+            candidate = run_dir / relative
+            if candidate.exists():
+                return candidate
+
     run_candidates = sorted(
-        (repo_root / "outputs" / "runs").glob(f"*/*{suffix}"),
+        (repo_root / "outputs" / "runs").rglob(f"*{suffix}"),
         key=lambda path: path.stat().st_mtime,
         reverse=True,
     )
     for candidate in run_candidates:
         if candidate.name == f"{stem}{suffix}" or candidate.name.endswith(suffix):
             return candidate
+    if not required:
+        return None
     raise FileNotFoundError(f"未找到 {stem}{suffix}")
 
 
@@ -94,24 +121,33 @@ def check_required_files(repo_root: Path) -> list[str]:
 
 def check_one_requirement(repo_root: Path, requirement: Path) -> bool:
     stem = requirement.stem
-    report = find_artifact(repo_root, stem, ".test-points.md")
-    details = find_artifact(repo_root, stem, ".testpoint-details.md")
+    report = find_artifact(repo_root, stem, ".test-points.md", required=False)
+    details = find_artifact(repo_root, stem, ".testpoint-details.md", required=False)
     design_input = find_artifact(repo_root, stem, ".testcase-design-input.md")
 
     print(f"\n== {requirement} ==")
     ok = True
     ok &= run_command([sys.executable, "bin/lint-testcase-design-input.py", str(design_input)], repo_root)
-    ok &= run_command([sys.executable, "bin/lint-testpoint-report.py", str(report)], repo_root)
-    ok &= run_command([sys.executable, "bin/lint-testpoint-report.py", str(details)], repo_root)
-    ok &= run_command([sys.executable, "bin/semantic-testpoint-check.py", str(report)], repo_root)
 
-    report_table = collect_testpoint_table(report)
-    details_table = collect_testpoint_table(details)
-    if report_table != details_table:
-        print(f"失败: {report} 与 {details} 的测试点明细不一致")
-        ok = False
+    if report:
+        ok &= run_command([sys.executable, "bin/lint-testpoint-report.py", str(report)], repo_root)
+        ok &= run_command([sys.executable, "bin/semantic-testpoint-check.py", str(report)], repo_root)
     else:
-        print("通过: 过程报告与兼容明细文件的测试点表一致")
+        print("跳过: 未生成过程分析报告")
+
+    if details:
+        ok &= run_command([sys.executable, "bin/lint-testpoint-report.py", str(details)], repo_root)
+    else:
+        print("跳过: 未生成兼容测试点明细")
+
+    if report and details:
+        report_table = collect_testpoint_table(report)
+        details_table = collect_testpoint_table(details)
+        if report_table != details_table:
+            print(f"失败: {report} 与 {details} 的测试点明细不一致")
+            ok = False
+        else:
+            print("通过: 过程报告与兼容明细文件的测试点表一致")
     return ok
 
 

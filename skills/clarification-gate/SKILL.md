@@ -13,7 +13,7 @@ description: 在多个测试分析检查点使用。用于收集、去重、分�
 - 当前阶段产物，例如记忆上下文包、结构化需求模型、方法路由表、方法证据、设计输入草稿或覆盖审查结果。
 - 已累计的澄清候选问题。
 - 已回答的澄清会话记录。
-- `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
+- `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`。
 - `templates/clarification-template.md`。
 
 ## 检查点
@@ -107,7 +107,7 @@ description: 在多个测试分析检查点使用。用于收集、去重、分�
 - 权限边界不清，例如角色、租户、归属、数据范围或审批权限不同。
 - 金额、数量、时间、次数、配额、阈值等边界缺失。
 - 接口失败、超时、重试、幂等、回调或错误码规则缺失。
-- 当前需求与 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md` 中已确认事实冲突。
+- 当前需求与 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md` 中已确认事实冲突。
 - 需求只出现“合理、快速、稳定、优化”等不可验证表达，且影响核心验收。
 
 以下情况标记为 `Important`：
@@ -176,7 +176,7 @@ description: 在多个测试分析检查点使用。用于收集、去重、分�
 
 ## 会话产物
 
-创建或更新 `${PROJECT_ROOT}/outputs/runs/<run-id>/clarification-session.md`，记录：
+创建或更新 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/clarification-session.md`，记录：
 
 - 当前检查点。
 - 澄清问题队列。

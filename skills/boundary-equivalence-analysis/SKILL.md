@@ -7,12 +7,18 @@ description: 当需求包含范围、阈值、数量、金额、时间窗口、�
 
 本 skill 用于输入域、业务域和校验规则的测试分析。
 
+## 职责边界
+
+- 本 skill 只产出内部方法证据和测试点候选，供 `testpoint-generation` 归并为场景化设计输入。
+- 等价类、边界集合、取值枚举和具体边界值是分析过程产物，不直接进入 `templates/testcase-design-input-template.md`。
+- 后续独立测试设计项目会基于主交付件把测试点展开为具体用例、步骤、测试数据和预期结果；本 skill 不建议用例数量或测试设计模式。
+
 ## 输入
 
 - 结构化需求片段。
 - 需求依据。
 - `knowledge/defect-patterns.md`。
-- `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
+- `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`。
 
 ## 分析步骤
 
@@ -52,5 +58,6 @@ description: 当需求包含范围、阈值、数量、金额、时间窗口、�
 
 - 除非需求明确给出具体值，否则不要列具体测试数据。
 - 表达为“验证某边界/等价类规则是否生效”，不要写成操作步骤。
+- 最终设计输入中只保留规则或条件级验证目标，不把 `边界值`、`等价类` 或边界取值清单写入测试点文本。
 - 不把常识中的默认上限、行业惯例或历史经验写成已确认阈值。
 - 不直接调用 `AskUserQuestion`。

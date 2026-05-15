@@ -1,0 +1,47 @@
+# 输出产物契约
+
+## 目标
+
+`outputs/` 只保存运行产物。每次分析创建一个独立 run 目录，目录内按产物类别固定命名，避免不同模型、语言环境或需求文件名处理方式导致下游无法稳定定位文件。
+
+## 目录结构
+
+```text
+outputs/
+└── runs/
+    └── <run-id>/
+        ├── deliverables/
+        │   └── testcase-design-input.md
+        ├── process/
+        │   ├── context-pack.md
+        │   └── clarification-session.md
+        ├── reports/
+        │   └── test-analysis-report.md
+        └── legacy/                  # 按需
+            └── testpoint-details.md
+```
+
+## 产物分类
+
+| 类别 | 路径 | 是否默认生成 | 说明 |
+|---|---|---|---|
+| 主交付件 | `deliverables/testcase-design-input.md` | 是 | 唯一跨项目交接物，供后续独立测试设计项目消费 |
+| 过程上下文 | `process/context-pack.md` | 是 | 当前 run 筛选出的 memory 和项目上下文快照 |
+| 澄清记录 | `process/clarification-session.md` | 有澄清候选时生成 | 记录澄清候选、触发决策、用户回答和未解决问题 |
+| 过程报告 | `reports/test-analysis-report.md` | 可选 | Analysis 内部审查、追溯和质量门禁报告 |
+| 兼容明细 | `legacy/testpoint-details.md` | 默认不生成 | 仅为旧流程、表格导入或人工审查兼容保留 |
+
+## 命名规则
+
+- run 目录名使用 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。
+- run 目录内文件名固定，不再使用需求文件名作为产物文件名前缀。
+- 下游只读取 `outputs/runs/<run-id>/deliverables/testcase-design-input.md`。
+- 不再默认生成 `<需求文件名安全短名>.test-points.md` 或 `<需求文件名安全短名>.testpoint-details.md`。
+- 如需兼容旧流程，独立明细只写入 `legacy/testpoint-details.md`，不得替代主交付件。
+
+## 精简原则
+
+- 主交付件必须自包含，不能要求后续项目读取 `process/` 或 `reports/`。
+- 过程报告中可以包含方法路由、方法证据、覆盖审查和专家评分，因此不再另行生成多份过程类 Markdown。
+- `process/` 只保留运行恢复和追溯必需文件。
+- `legacy/` 只在用户明确要求或旧工具链需要时生成。
