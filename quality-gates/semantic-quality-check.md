@@ -2,16 +2,16 @@
 
 ## 目的
 
-检查测试点是否真正体现测试方法、风险分层和需求追踪，而不是只满足表格结构。
+检查设计输入是否真正支撑下游用例设计，并在过程报告中体现测试方法、风险分层和需求追踪，而不是只满足表格结构。
 
 ## 可机械检查项
 
-- 必选测试方法是否在测试点方法列中体现，或是否有待确认问题解释缺口。
+- 必选测试方法是否落到设计输入中的场景测试点/接口测试点，或是否有待确认问题解释缺口。
 - 必选测试方法是否有方法分析证据，或是否有待确认问题解释缺口。
-- 测试点类型是否来自 `knowledge/testpoint-standard.md`。
-- 测试点方法是否来自 `knowledge/testpoint-standard.md`。
+- 设计输入中的大类/子类是否来自 `templates/testcase-design-input-template.md`。
+- 过程报告中的测试点类型和方法是否来自 `knowledge/testpoint-standard.md`。
 - 高等级测试点是否有风险备注。
-- 完整报告与独立测试点明细是否一致。
+- 过程报告与测试用例设计输入是否不冲突。
 - 需求依据是否过于宽泛。
 - 风险备注是否过于泛化。
 - 方法证据是否使用 `ME-*` 格式并关联 `TP-*` 或 `Q-*`。
@@ -21,16 +21,17 @@
 ## 建议命令
 
 ```bash
-bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md
+bin/lint-testcase-design-input.py ${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testcase-design-input.md
+bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-analysis-report.md
 bin/smoke-test-analysis.py
 ```
 
 ## 失败条件
 
-- 必选测试方法没有测试点体现，且没有待确认问题解释。
+- 必选测试方法没有场景测试点或接口测试点承接，且没有待确认问题解释。
 - 必选测试方法没有方法证据，且没有待确认问题解释。
-- 测试点类型不在 `knowledge/testpoint-standard.md` 的标准类型中。
-- 完整报告和独立明细文件中的测试点表不一致。
+- 设计输入中的大类/子类不在模板类型定义中。
+- 过程报告和设计输入中的测试点表达冲突。
 - 质量门禁结果存在 `失败`。
 - 专家评分低于通过线或存在 0 分维度。
 

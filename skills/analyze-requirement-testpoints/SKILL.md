@@ -1,11 +1,13 @@
 ---
 name: analyze-requirement-testpoints
-description: 当用户要求基于单个 Markdown 需求文档生成测试点分析报告时使用。该 skill 是主入口，负责串联记忆上下文、需求结构化、交互澄清、测试方法路由、测试点生成、覆盖审查和最终报告输出；入参来自 $ARGUMENTS。
+description: 当用户要求基于单个 Markdown 需求文档生成下游 Test-Design-Agent 可消费的测试用例设计输入时使用。该 skill 是主入口，负责串联记忆上下文、需求结构化、交互澄清、测试方法路由、场景化测试点生成、覆盖审查和设计输入输出；入参来自 $ARGUMENTS。
 ---
 
 # 需求测试点分析主入口
 
-本 skill 是完整链路入口。目标是从 `$ARGUMENTS` 指定的一份 Markdown 需求文档生成测试点分析报告。
+本 skill 是完整链路入口。目标是从 `$ARGUMENTS` 指定的一份 Markdown 需求文档生成 `测试用例设计输入`，作为下游 Test-Design-Agent 的直接输入。
+
+过程分析报告可以作为审查和追溯产物保留，但主交付物必须是场景化的设计输入文件，而不是扁平测试点明细。
 
 ## 必需输入
 
@@ -16,8 +18,8 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 - 本 skill 只负责编排完整分析链路和写出本次运行产物。
 - 业务术语、设计约束和项目偏好来自 `memory-context-builder` 生成的上下文包，不在本 skill 内重复维护。
 - 通用测试理论、标准类型、标准方法、风险规则和专家审查规则来自 `knowledge/`。
-- 报告结构来自 `templates/`，质量判定来自 `quality-gates/` 和 `coverage-review`。
-- 专项分析 skill 只产出方法证据和测试点候选；最终测试点表由 `testpoint-generation` 统一合并。
+- 下游设计输入结构来自 `templates/testcase-design-input-template.md`，过程分析报告结构来自 `templates/final-report-template.md`，质量判定来自 `quality-gates/` 和 `coverage-review`。
+- 专项分析 skill 只产出方法证据和测试点候选；最终由 `testpoint-generation` 统一合并为测试场景、场景测试条件、场景测试点、接口测试清单和接口测试点。
 
 ## 项目根目录与输出路径
 
@@ -55,13 +57,13 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
    - `combinatorial-compatibility-analysis`
 10. 汇总专项 skill 产出的 `ME-*` 方法分析证据，并登记专项方法缺口澄清候选。
 11. 在 `CP-METHOD` 检查点使用 `clarification-gate`；优先确认会导致决策表、状态图、权限矩阵或接口契约失真的缺口。
-12. 使用 `testpoint-generation` 基于方法证据生成测试点明细；原则上不在本阶段打断用户，缺口写为待确认风险点。
+12. 使用 `testpoint-generation` 基于方法证据生成场景化测试用例设计输入：先识别测试场景，再补齐场景测试条件、场景测试点、接口测试清单和接口测试点；原则上不在本阶段打断用户，缺口写为待确认风险点。
 13. 使用 `coverage-review` 执行覆盖审查、质量门禁和专家评分，并登记阻断报告发布的澄清候选。
 14. 在 `CP-REVIEW` 检查点使用 `clarification-gate`；默认不触发，仅当用户确认后才能安全发布报告时提问，并记录未触发原因。
 15. 根据澄清会话、结构化需求模型、方法证据和覆盖审查结果，刷新最终“待确认问题”：移除已回答或已覆盖的问题，只保留未解决问题和暂不确认风险。
 16. 如果质量门禁因输出质量失败，修正后重新审查；如果因需求信息缺失失败，保留刷新后的失败项并生成“待确认问题”。
-17. 将最终报告写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md`。
-18. 将测试点明细表单独写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`，便于后续评审、导入表格或继续生成测试用例。
+17. 将主输出写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testcase-design-input.md`，使用 `templates/testcase-design-input-template.md`，供下游 Test-Design-Agent 直接消费。
+18. 如需保留过程审查信息，将分析报告写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-analysis-report.md`，报告中可包含方法路由、方法证据、覆盖审查、质量门禁、专家评分和 memory 更新建议。
 
 ## 阶段产物契约
 
@@ -71,21 +73,19 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 | `requirement-testability` | 结构化需求模型、可测性结论、需求澄清候选 | 方法路由、澄清闸门 |
 | `testing-method-router` | 方法路由表、方法范围澄清候选 | 专项方法 skill、测试点生成 |
 | 专项方法 skill | `ME-*` 方法证据、测试点候选、方法缺口候选 | 测试点生成、澄清闸门 |
-| `testpoint-generation` | 标准测试点表、独立明细表内容、待确认风险点 | 覆盖审查 |
-| `coverage-review` | 门禁结果、专家评分、阻断项和修正建议 | 最终报告刷新 |
+| `testpoint-generation` | 测试用例设计输入、场景化测试点、接口测试点、待确认风险点 | 覆盖审查 |
+| `coverage-review` | 门禁结果、专家评分、阻断项和修正建议 | 设计输入和过程报告刷新 |
 
 ## 输出要求
 
-- 使用 `templates/final-report-template.md`。
-- 必须在报告中记录 `PROJECT_ROOT`、`run-id`、运行目录、完整报告路径、测试点明细路径和澄清会话路径。
-- 必须包含测试方法路由表，让评审者看到使用了哪些测试理论。
-- 必须包含方法分析证据摘要，让评审者看到每种测试方法的分析过程。
-- 必须包含交互澄清摘要；若未触发，写明“未触发交互澄清”和主要未触发原因。
-- 如果触发过澄清，必须说明检查点、已确认答案、暂不确认风险和澄清会话产物路径。
-- “待确认问题”必须在所有交互澄清完成后刷新，不得保留已回答或已被上下文覆盖的问题。
-- 每条测试点必须在 `测试点` 描述中体现被测对象、特定场景和验证特性，并包含 `方法` 字段。
-- 必须包含质量门禁结果、专家评分和 memory 更新建议。
-- 必须额外生成仅包含测试点明细的独立 Markdown 文件，使用 `templates/testpoint-output-template.md`。
+- 主输出使用 `templates/testcase-design-input-template.md`。
+- 主输出必须包含：需求信息、测试场景清单、测试场景详情、接口测试清单、接口测试详情、待确认信息和输入完整性自检。
+- 主输出必须先按业务/系统行为拆分 `SC-*` 测试场景，再在每个场景下提供可供下游生成用例的共用条件。
+- 每个场景的 `必填条件` 必须包含 `场景入口/触发方式`、`执行用户/角色`、`前置条件`、`测试数据因子`、`业务设计约束`。
+- 场景测试点必须使用 `测试点 ID | 测试点 | 大类 | 子类 | 级别 | 风险/备注`，接口测试点必须使用 `测试点 ID | 测试点 | 大类 | 子类 | 风险/备注`。
+- 主输出不得包含 `方法`、`需求依据`、`方法路由`、`方法证据`、`质量门禁`、`专家评分` 或 `建议沉淀的记忆更新` 等过程字段。
+- “待确认信息”必须在所有交互澄清完成后刷新，只保留下游设计可执行用例时必须知道的问题；没有待确认问题时写“本次无待确认信息。”，不要保留空问题行。
+- 如保留过程分析报告，使用 `templates/final-report-template.md`，并在报告中记录 `PROJECT_ROOT`、`run-id`、运行目录、设计输入路径、分析报告路径、澄清会话路径和上下文包路径。
 
 ## 硬性约束
 
@@ -101,4 +101,4 @@ description: 当用户要求基于单个 Markdown 需求文档生成测试点分
 - 复杂需求的整次分析目标是累计 5 到 10 个确认项；简单需求可以少问或不问，但必须在澄清会话产物中说明原因。
 - 用户对澄清问题的回答默认只作用于本次分析。
 - 未经用户明确确认，不写入 memory 源文件。
-- 不把中间候选表直接当作最终测试点输出；最终测试点必须经过 `testpoint-generation` 合并和 `coverage-review` 审查。
+- 不把中间候选表或扁平测试点表直接当作最终设计输入；最终设计输入必须经过 `testpoint-generation` 场景化合并和 `coverage-review` 审查。

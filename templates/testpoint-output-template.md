@@ -1,4 +1,6 @@
-# 测试点输出模板
+# 兼容测试点明细模板
+
+> 说明：该模板仅用于兼容旧的过程审查或表格导入场景。当前主输出应使用 `templates/testcase-design-input-template.md` 生成 `<需求文件名安全短名>.testcase-design-input.md`。
 
 ```markdown
 # <需求名称> 测试点明细
@@ -29,6 +31,6 @@
 
 ## 落盘规则
 
-- 完整报告路径：`${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md`。
-- 独立明细路径：`${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md`。
-- 独立明细文件必须与完整报告中的 `## 8. 测试点明细` 内容保持一致。
+- 主输出路径：`${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testcase-design-input.md`。
+- 如需兼容旧流程，可额外生成过程报告或独立明细，但不得替代主输出。
+- 兼容明细文件必须能追溯到主输出中的场景测试点和接口测试点，不得与主输出冲突。

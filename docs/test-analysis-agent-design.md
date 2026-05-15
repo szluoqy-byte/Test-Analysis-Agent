@@ -2,7 +2,7 @@
 
 ## 1. 文档目的
 
-本文描述测试分析 Agent 的系统架构、运行流程、组件职责和质量闭环。该 Agent 面向 Markdown 需求文档，目标是模拟测试专家的分析过程，输出“测试点分析报告”，而不是测试用例、测试步骤或自动化脚本。
+本文描述测试分析 Agent 的系统架构、运行流程、组件职责和质量闭环。该 Agent 面向 Markdown 需求文档，目标是模拟测试专家的分析过程，输出下游 Test-Design-Agent 可直接消费的“测试用例设计输入”，而不是测试用例、测试步骤或自动化脚本。
 
 设计优先适配 Claude Code plugin / skills / subagents 体系，同时保持核心知识、方法和模板平台无关，后续可增加 OpenClaw 适配层。
 
@@ -15,7 +15,8 @@
 - 基于测试理论选择合适分析方法，包括风险驱动、边界值、等价类、状态迁移、决策表、场景流、权限矩阵、接口契约、数据一致性和组合兼容。
 - 为每种必选测试方法输出 `ME-*` 方法分析证据，证明测试理论被实际应用。
 - 结合 memory 注入项目上下文、历史缺陷、测试经验和输出偏好。
-- 输出中等粒度、可评审、可追踪的测试点。
+- 输出按测试场景组织、包含共用条件和测试点的设计输入。
+- 可选保留中等粒度、可评审、可追踪的过程分析报告。
 - 通过质量门禁和确定性 lint 做自我审查。
 
 ### 2.2 非目标
@@ -44,7 +45,8 @@
 flowchart LR
   User["测试人员 / 产品 / 研发"] --> Input["Markdown 需求文档"]
   Input --> Plugin["Test Analysis Agent Plugin"]
-  Plugin --> Report["测试点分析报告"]
+  Plugin --> Report["测试用例设计输入"]
+  Plugin --> AnalysisReport["过程分析报告"]
   Plugin --> MemoryProposal["建议沉淀的记忆更新"]
   MemorySource["项目 Memory / 测试经验 Memory"] --> Plugin
   Knowledge["测试专家知识包"] --> Plugin
@@ -52,7 +54,7 @@ flowchart LR
   Quality["质量门禁与 lint"] --> Plugin
 ```
 
-系统对外只暴露一个核心能力：基于需求文档生成测试点分析报告。稳定入口和流程真相是主 skill；agents 只作为可选协作角色，knowledge、memory、template 和 quality gate 为主流程提供支撑。
+系统对外只暴露一个核心能力：基于需求文档生成测试用例设计输入。稳定入口和流程真相是主 skill；agents 只作为可选协作角色，knowledge、memory、template 和 quality gate 为主流程提供支撑。
 
 ## 5. 目录结构视图
 
@@ -98,8 +100,8 @@ test-analysis-agent/
         └── <run-id>/
             ├── context-pack.md
             ├── clarification-session.md
-            ├── <需求文件名安全短名>.test-points.md
-            └── <需求文件名安全短名>.testpoint-details.md
+            ├── <需求文件名安全短名>.testcase-design-input.md
+            └── <需求文件名安全短名>.test-analysis-report.md
 ```
 
 ### 5.1 目录职责
@@ -111,11 +113,11 @@ test-analysis-agent/
 | `skills/` | 测试分析方法能力，负责具体分析动作 |
 | `knowledge/` | 稳定专家知识、缺陷模式、测试标准、覆盖体系 |
 | `memory/` | 经人工确认的项目上下文、领域事实和测试经验 |
-| `templates/` | 中间产物和最终报告格式 |
+| `templates/` | 中间产物、设计输入和过程报告格式 |
 | `quality-gates/` | Agent 可读的质量门禁规则 |
 | `bin/` | 可机械执行的结构 lint、语义启发式检查和 smoke 回归脚本 |
 | `examples/` | 回归样例需求和输出 |
-| `outputs/` | 基于项目根目录保存的运行产物、完整测试点报告和独立测试点明细 |
+| `outputs/` | 基于项目根目录保存的运行产物、测试用例设计输入和过程分析报告 |
 
 ### 5.2 Claude Code 插件兼容性
 
@@ -143,10 +145,10 @@ flowchart TB
   MainSkill --> SkillLayer["Skill 方法层\n测试理论与分析动作"]
   SkillLayer --> KnowledgeLayer["Knowledge 专家知识层\n规则 / 缺陷 / 标准 / 覆盖体系"]
   SkillLayer --> MemoryLayer["Memory 记忆层\n项目事实 / 项目经验 / 输出偏好"]
-  SkillLayer --> TemplateLayer["Template 模板层\n结构化模型 / 测试点 / 最终报告"]
+  SkillLayer --> TemplateLayer["Template 模板层\n结构化模型 / 设计输入 / 过程报告"]
   SkillLayer --> QualityLayer["质量门禁层\n覆盖 / 追踪 / 方法 / 风险 / 结构"]
   QualityLayer --> ScriptLayer["确定性校验\nlint / semantic / smoke"]
-  ScriptLayer --> Output["最终测试点分析报告"]
+  ScriptLayer --> Output["测试用例设计输入"]
 ```
 
 ### 6.1 分层职责边界
@@ -156,7 +158,7 @@ Agent = 可选协作角色，不能维护另一套流程真相
 Skill = 主流程和分析动作，定义怎么分析、何时触发某种测试理论
 Knowledge = 使用哪些稳定测试知识、专家规则、缺陷模式和标准
 Memory = 当前项目和历史反馈中已经确认、且会影响本次分析的上下文
-Template = 中间产物和最终报告长什么样
+Template = 中间产物、设计输入和过程报告长什么样
 Quality Gate = 输出是否达到测试专家评审标准
 bin = 对报告结构和非用例化约束做机械校验
 ```
@@ -168,7 +170,7 @@ bin = 对报告结构和非用例化约束做机械校验
 | Knowledge | 通用测试理论、框架术语、测试点标准、缺陷模式、方法路由矩阵、覆盖分类、专家评分标准 | 项目事实、临时偏好、单次运行结果、未确认业务规则 | `knowledge/domain-glossary.md`、`knowledge/testpoint-standard.md`、`knowledge/defect-patterns.md` |
 | Skills | 触发条件、输入、分析步骤、输出格式引用、质量检查顺序 | 长篇理论定义、通用缺陷清单、级别定义、项目事实 | `skills/testing-method-router/SKILL.md`、`skills/testpoint-generation/SKILL.md` |
 | Memory | 经人工确认的项目事实、项目专属术语、业务域约定、输出偏好、项目历史缺陷、项目反馈教训 | 通用测试理论、框架术语、通用缺陷模式、方法步骤、未确认假设 | `memory/project-memory.md`、`memory/domains/*.md`、`memory/testing-experience-memory.md` |
-| Templates | Markdown 结构、字段占位、最小示例和产物布局 | 标准枚举的独立定义、项目事实、执行流程 | `templates/final-report-template.md`、`templates/testpoint-output-template.md` |
+| Templates | Markdown 结构、字段占位、最小示例和产物布局 | 标准枚举的独立定义、项目事实、执行流程 | `templates/testcase-design-input-template.md`、`templates/final-report-template.md` |
 | Quality Gates | 通过/失败条件、字段校验、结构校验和风险校验 | 新测试理论、新业务规则、另一套标准定义 | `quality-gates/output-schema-check.md`、`quality-gates/method-application-check.md` |
 | bin | 可机械执行的结构、语义和回归检查 | 不可解释的专家判断、项目事实、运行流程编排 | `bin/lint-testpoint-report.py`、`bin/semantic-testpoint-check.py` |
 
@@ -201,11 +203,11 @@ flowchart TD
   CS --> Resume["合并本次上下文\n返回触发它的检查点"]
   C5 --> J["确定性检查\nlint / semantic"]
   J --> K{"是否通过"}
-  K -- "通过" --> L["输出最终测试点分析报告"]
+  K -- "通过" --> L["输出测试用例设计输入"]
   K -- "输出质量问题" --> G
   K -- "需求信息缺失" --> M["保留待确认问题"]
   M --> L
-  L --> DTL["输出独立测试点明细文件"]
+  L --> RPT["按需输出过程分析报告"]
   L --> N["输出建议沉淀的记忆更新"]
 ```
 
@@ -251,14 +253,14 @@ sequenceDiagram
   E->>S: 调用必要专项方法并生成 ME-* 证据
   S-->>E: 方法分析证据 / 方法缺口澄清候选
   E->>C: CP-METHOD 处理高风险方法缺口
-  E->>G: 生成测试点明细
-  G-->>E: 测试点明细 / 待确认风险
+  E->>G: 生成测试用例设计输入
+  G-->>E: 场景化测试点 / 接口测试点 / 待确认风险
   E->>Q: 执行覆盖审查、质量门禁和专家评分
   Q-->>E: 审查结果 / 专家评分 / 修正建议
   E->>C: CP-REVIEW 只处理阻断报告发布的问题
   E->>L: 执行结构和语义启发式校验
   L-->>E: 通过 / 失败
-  E-->>U: 最终测试点分析报告 / 独立明细 / memory 更新建议
+  E-->>U: 测试用例设计输入 / 过程分析报告 / memory 更新建议
 ```
 
 ## 9. 测试方法路由架构视图
@@ -326,7 +328,7 @@ Memory 不保存：
 
 - 通用测试理论和通用缺陷模式。稳定知识放在 `knowledge/`，分析动作放在 `skills/`。
 - 未确认的业务规则。未确认内容应放在“待确认问题”或“建议沉淀的 Memory 更新”。
-- 单次运行的完整中间产物。context pack、澄清会话、结构化需求模型、测试点草稿和审查结果归属 `outputs/`。
+- 单次运行的完整中间产物。context pack、澄清会话、结构化需求模型、设计输入草稿和审查结果归属 `outputs/`。
 
 ### 10.2 Memory 文件结构
 
@@ -373,7 +375,7 @@ flowchart TD
 3. 同时检索 `testing-experience-memory.md` 中与本次需求相关的项目经验。
 4. 只摘取与本次需求直接相关的内容，生成 `${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md`。
 5. 需求分析、方法路由、测试点生成和覆盖审查只读取当前 run 的 `context-pack.md`，避免长期 memory 全量注入。
-6. 最终报告输出“建议沉淀的 Memory 更新”，说明建议写入哪个长期文件或业务域分片、依据是什么。
+6. 过程分析报告输出“建议沉淀的 Memory 更新”，说明建议写入哪个长期文件或业务域分片、依据是什么。
 7. 只有用户明确确认后，才把建议追加到 `project-memory.md`、`domains/*.md` 或 `testing-experience-memory.md`。
 
 ### 10.5 写入原则
@@ -393,12 +395,12 @@ flowchart LR
   C --> D["测试方法路由表"]
   D --> E["专项方法分析结果"]
   E --> EV["方法分析证据摘要"]
-  EV --> F["测试点明细"]
+  EV --> F["测试用例设计输入"]
   F --> G["覆盖审查结果"]
   G --> H["质量门禁结果"]
   H --> I["专家评审评分"]
-  I --> J["最终测试点分析报告"]
-  F --> DTL["独立测试点明细文件"]
+  I --> J["过程分析报告"]
+  F --> DTL["下游设计输入文件"]
   B --> CQ["澄清候选队列"]
   C --> CQ
   D --> CQ
@@ -419,7 +421,7 @@ flowchart LR
 | 澄清会话产物 | `clarification-gate` | 记录 AskUserQuestion 问题队列、未触发原因、用户回答、已解决问题和刷新后的未解决待确认问题 |
 | 测试方法路由表 | `testing-method-router` | 决定每段需求使用哪些测试理论 |
 | 方法分析证据摘要 | 专项测试方法 skills | 证明测试理论被实际应用，并关联测试点或待确认问题 |
-| 测试点明细 | `testpoint-generation` | 输出可评审测试点，并同时写入完整报告和独立明细文件 |
+| 测试用例设计输入 | `testpoint-generation` | 输出场景化测试点、场景测试条件、接口清单和接口测试点 |
 | 覆盖审查结果 | `coverage-review` | 判断覆盖是否充分 |
 | 质量门禁结果 | `quality-gates/` | 判断是否满足输出质量要求 |
 | 专家评审评分 | `expert-review-rubric.md` | 衡量是否达到测试专家最低标准 |
@@ -432,8 +434,8 @@ flowchart LR
 ${PROJECT_ROOT}/outputs/runs/<run-id>/
 ├── context-pack.md
 ├── clarification-session.md
-├── <需求文件名安全短名>.test-points.md
-└── <需求文件名安全短名>.testpoint-details.md
+├── <需求文件名安全短名>.testcase-design-input.md
+└── <需求文件名安全短名>.test-analysis-report.md
 ```
 
 `run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。`context-pack.md` 是该 run 的上下文快照；当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件必须使用 `${PROJECT_ROOT}` 下的绝对路径。
@@ -444,7 +446,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/
 
 ```mermaid
 flowchart TD
-  Draft["测试点草稿"] --> NonCase["非用例化检查"]
+  Draft["设计输入草稿"] --> NonCase["非用例化检查"]
   Draft --> EvidenceGate["方法证据链检查"]
   Draft --> Coverage["覆盖检查"]
   Draft --> Trace["需求追踪检查"]
@@ -464,7 +466,7 @@ flowchart TD
   Lint --> Semantic["语义启发式检查"]
   Semantic --> Score["专家评分"]
   Score --> Gate{"是否达标"}
-  Gate -- "达标" --> Final["最终报告"]
+  Gate -- "达标" --> Final["测试用例设计输入"]
   Gate -- "输出质量不足" --> Revise["修正测试点"]
   Revise --> Draft
   Gate -- "需求缺失" --> Questions["保留待确认问题"]
@@ -480,7 +482,7 @@ flowchart TD
 | `traceability-check.md` | 每条测试点是否有需求依据 |
 | `method-application-check.md` | 必选测试方法是否有测试点或待确认问题 |
 | `risk-priority-check.md` | 高风险点是否被优先覆盖 |
-| `output-schema-check.md` | 最终报告章节、字段和级别是否合法 |
+| `output-schema-check.md` | 设计输入章节、字段和级别是否合法 |
 | `semantic-quality-check.md` | 方法应用、风险备注、依据粒度和明细一致性是否达标 |
 | `bin/lint-testpoint-report.py` | 机械检查章节、表头、ID、类型、方法、禁用用例字段 |
 | `bin/semantic-testpoint-check.py` | 启发式检查方法覆盖、类型方法匹配、风险备注和依据质量 |
@@ -530,26 +532,27 @@ flowchart TD
 | 文件 | 作用 |
 |---|---|
 | `requirement-model-template.md` | 结构化需求模型模板 |
-| `testpoint-output-template.md` | 独立测试点明细模板 |
+| `testcase-design-input-template.md` | 下游 Test-Design-Agent 主输入模板 |
+| `testpoint-output-template.md` | 兼容保留的独立测试点明细模板 |
 | `method-analysis-template.md` | 方法分析证据摘要模板 |
 | `clarification-template.md` | AskUserQuestion 澄清问题和会话产物模板 |
 | `coverage-review-template.md` | 覆盖审查模板 |
 | `memory-update-proposal-template.md` | Memory 更新建议模板 |
-| `final-report-template.md` | 最终报告模板 |
+| `final-report-template.md` | 过程分析报告模板 |
 | `context-pack-template.md` | 记忆上下文包模板 |
 
 ## 14. 输出契约
 
-完整报告实际写入路径：
+测试用例设计输入实际写入路径：
 
 ```text
-${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-points.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testcase-design-input.md
 ```
 
-独立测试点明细实际写入路径：
+过程分析报告建议写入路径：
 
 ```text
-${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.testpoint-details.md
+${PROJECT_ROOT}/outputs/runs/<run-id>/<需求文件名安全短名>.test-analysis-report.md
 ```
 
 澄清会话路径：
@@ -564,73 +567,52 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/clarification-session.md
 ${PROJECT_ROOT}/outputs/runs/<run-id>/context-pack.md
 ```
 
-最终报告结构：
+测试用例设计输入结构：
 
 ```markdown
-# <需求名称> 测试点分析报告
+# <需求名称> 测试用例设计输入
 
-## 1. 分析范围
-## 2. 记忆上下文包摘要
-## 3. 需求结构化摘要
-## 4. 交互澄清摘要
-## 5. 测试方法路由
-## 6. 方法分析证据摘要
-## 7. 待确认问题
-## 8. 测试点明细
-## 9. 覆盖审查结果
-## 10. 质量门禁结果
-## 11. 专家评审评分
-## 12. 建议沉淀的记忆更新
+## 1. 需求信息
+## 2. 测试场景清单
+## 3. 测试场景详情
+## 4. 接口测试清单
+## 5. 接口测试详情
+## 6. 待确认信息
+## 7. 输入完整性自检
 ```
 
-`待确认问题` 必须在所有交互澄清完成后刷新，只保留未解决问题、暂不确认风险和质量门禁仍无法关闭的需求缺口；已被用户回答、已被上下文覆盖或重复的问题不得出现在最终报告中。
+`待确认信息` 必须在所有交互澄清完成后刷新，只保留下游设计可执行用例时必须知道的问题；已被用户回答、已被上下文覆盖或重复的问题不得出现在主输出中。
 
-方法分析证据字段：
+场景测试点字段：
+
+| 测试点 ID | 测试点 | 大类 | 子类 | 级别 | 风险/备注 |
+|---|---|---|---|---|---|
+
+接口测试点字段：
+
+| 测试点 ID | 测试点 | 大类 | 子类 | 风险/备注 |
+|---|---|---|---|---|
+
+过程分析报告可以保留方法分析证据字段：
 
 | 证据ID | 方法 | 需求片段 | 分析结论 | 关联测试点/待确认 |
 |---|---|---|---|---|
 
-测试点明细字段：
-
-| ID | 模块 | 测试点 | 类型 | 方法 | 需求依据 | 级别 | 风险/备注 |
-|---|---|---|---|---|---|---|---|
-
-独立测试点明细文件结构：
-
-```markdown
-# <需求名称> 测试点明细
-
-- 输入文档：
-- 运行 ID：
-- 来源报告：
-- 生成时间：
-- 说明：本文件仅保存测试点明细，不包含覆盖审查、质量门禁、专家评分和记忆更新建议。
-
-## 测试点明细
-
-| ID | 模块 | 测试点 | 类型 | 方法 | 需求依据 | 级别 | 风险/备注 |
-|---|---|---|---|---|---|---|---|
-```
-
 ### 14.1 类型、方法和级别来源
 
-测试点类型、测试方法枚举、粒度要求、非用例化约束和 `Level 0` 到 `Level 4` 的级别定义，以 `knowledge/testpoint-standard.md` 为唯一标准来源。模板、质量门禁和 lint 只做引用和校验，不另行维护一份定义。
+设计输入中的 `大类/子类` 以 `templates/testcase-design-input-template.md` 为准。内部分析使用的测试点类型、测试方法枚举、粒度要求、非用例化约束和 `Level 0` 到 `Level 4` 的级别定义，以 `knowledge/testpoint-standard.md` 为准。
 
 ## 15. 验收标准
 
-- 输入单个 Markdown 需求文档后，能输出完整测试点分析报告。
-- 输出内容按模块组织，测试点粒度中等。
-- 测试点不包含步骤化测试用例内容。
-- 每条测试点都有需求依据、方法、级别和风险备注，且 `测试点` 描述中体现被测对象、特定场景和验证特性。
+- 输入单个 Markdown 需求文档后，能输出测试用例设计输入。
+- 输出内容按测试场景组织，每个场景都有入口/触发方式、执行用户/角色、前置条件、测试数据因子和业务设计约束。
+- 测试点不包含步骤化测试用例内容、具体测试数据或完整预期结果。
+- 每条测试点都有大类、子类、级别和风险备注，且 `测试点` 描述中体现被测对象、特定场景和验证特性。
 - 能体现风险、边界、等价类、状态、权限、接口、决策表、场景流、数据一致性和组合兼容等测试理论。
-- 能输出测试方法路由表。
-- 能输出方法分析证据摘要，并将每个必选方法关联到测试点或待确认问题。
-- 能输出待确认问题。
-- 能输出质量门禁结果。
-- 能输出专家评审评分。
-- 能输出建议沉淀的记忆更新项。
-- 能额外输出独立测试点明细文件，且与完整报告中的测试点明细一致。
-- 示例报告可通过 `bin/lint-testpoint-report.py`、`bin/semantic-testpoint-check.py` 和 `bin/smoke-test-analysis.py`。
+- 能输出接口测试清单和接口测试详情，接口契约不混入页面或业务场景。
+- 能输出刷新后的待确认信息。
+- 过程分析报告能输出测试方法路由表、方法分析证据摘要、质量门禁结果、专家评分和建议沉淀的记忆更新项。
+- 示例主输出可通过 `bin/lint-testcase-design-input.py`，示例过程报告可通过 `bin/lint-testpoint-report.py`、`bin/semantic-testpoint-check.py` 和 `bin/smoke-test-analysis.py`。
 
 ## 16. 当前假设
 

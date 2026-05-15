@@ -25,13 +25,16 @@ REQUIRED_FILES = [
     "templates/final-report-template.md",
     "templates/method-analysis-template.md",
     "templates/testpoint-output-template.md",
+    "templates/testcase-design-input-template.md",
     "templates/context-pack-template.md",
     "templates/clarification-template.md",
     "quality-gates/output-schema-check.md",
+    "quality-gates/testcase-design-input-check.md",
     "quality-gates/semantic-quality-check.md",
     "outputs/runs/.gitkeep",
     "examples/evaluation-matrix.md",
     "bin/lint-testpoint-report.py",
+    "bin/lint-testcase-design-input.py",
     "bin/semantic-testpoint-check.py",
 ]
 
@@ -93,9 +96,11 @@ def check_one_requirement(repo_root: Path, requirement: Path) -> bool:
     stem = requirement.stem
     report = find_artifact(repo_root, stem, ".test-points.md")
     details = find_artifact(repo_root, stem, ".testpoint-details.md")
+    design_input = find_artifact(repo_root, stem, ".testcase-design-input.md")
 
     print(f"\n== {requirement} ==")
     ok = True
+    ok &= run_command([sys.executable, "bin/lint-testcase-design-input.py", str(design_input)], repo_root)
     ok &= run_command([sys.executable, "bin/lint-testpoint-report.py", str(report)], repo_root)
     ok &= run_command([sys.executable, "bin/lint-testpoint-report.py", str(details)], repo_root)
     ok &= run_command([sys.executable, "bin/semantic-testpoint-check.py", str(report)], repo_root)
@@ -106,7 +111,7 @@ def check_one_requirement(repo_root: Path, requirement: Path) -> bool:
         print(f"失败: {report} 与 {details} 的测试点明细不一致")
         ok = False
     else:
-        print("通过: 完整报告与独立明细文件的测试点表一致")
+        print("通过: 过程报告与兼容明细文件的测试点表一致")
     return ok
 
 

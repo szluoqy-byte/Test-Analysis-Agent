@@ -1,6 +1,6 @@
 # 示例评测矩阵
 
-本文件用于规划测试分析 Agent 的回归样例。每个样例都应包含输入需求、完整报告、独立测试点明细，并通过 `bin/smoke-test-analysis.py`。
+本文件用于规划测试分析 Agent 的回归样例。每个样例都应包含输入需求、测试用例设计输入、过程报告和测试点明细，并通过 `bin/smoke-test-analysis.py`。
 
 ## 已覆盖样例
 
@@ -21,7 +21,8 @@
 
 ## 样例验收
 
-- 完整报告通过 `bin/lint-testpoint-report.py`。
+- 测试用例设计输入通过 `bin/lint-testcase-design-input.py`。
+- 过程报告通过 `bin/lint-testpoint-report.py`。
 - 独立测试点明细通过 `bin/lint-testpoint-report.py`。
-- 完整报告通过 `bin/semantic-testpoint-check.py`。
-- 完整报告与独立测试点明细中的测试点表完全一致。
+- 过程报告通过 `bin/semantic-testpoint-check.py`。
+- 过程报告与独立测试点明细中的测试点表完全一致，且不与测试用例设计输入冲突。
