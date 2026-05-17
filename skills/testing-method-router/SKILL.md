@@ -1,6 +1,6 @@
 ---
 name: testing-method-router
-description: 在需求结构化之后使用，用于根据需求片段的分析维度和触发信号选择合适的测试分析方法和专项分析 skill，例如边界值、等价类、状态迁移、决策表、场景流、权限矩阵、接口契约、数据一致性、组合兼容和可观测性审计。
+description: 在需求结构化之后使用，用于根据需求片段的分析维度和触发信号选择合适的测试分析方法和专项分析 skill，例如边界值、等价类、状态迁移、决策表、场景流、权限矩阵、接口契约、数据一致性和组合兼容。
 ---
 
 # 测试分析维度与方法路由 Skill
@@ -47,10 +47,10 @@ description: 在需求结构化之后使用，用于根据需求片段的分析�
 | 需求片段 | 分析维度 | 触发信号 | 适用方法 | 调用 skill | 必要性 | 置信度 | 说明 |
 |---|---|---|---|---|---|---|---|
 
-如存在方法范围澄清候选，追加输出：
+如存在方法范围澄清候选，追加输出统一 `CQ-*` 候选表：
 
-| 问题ID | 检查点 | 来源阶段 | 问题 | 影响 | 阻塞级别 | mustAsk | 建议选项 | 关联需求依据 |
-|---|---|---|---|---|---|---|---|---|
+| 问题ID | checkpoint | sourceStage | header | question | why | impact | options | blockingLevel | priority | askPolicy | mustAsk | relatedRequirement | memoryConflict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
 ## 路由规则
 
@@ -58,7 +58,6 @@ description: 在需求结构化之后使用，用于根据需求片段的分析�
 - 路由矩阵以 `knowledge/test-method-routing-matrix.md` 为准。
 - 覆盖要求以 `knowledge/coverage-taxonomy.md` 为准。
 - 本 skill 只负责把当前需求片段映射到方法，并说明选择或跳过原因。
-- `可观测性审计` 没有独立专项 skill 时，可路由到 `risk-based-test-analysis` 或由 `testpoint-generation` 基于日志、审计、告警、对账和恢复路径生成候选。
 - 同一需求片段可路由到多个方法；后续由 `testpoint-generation` 合并重复测试点。
 - 测试用例设计模式属于后续独立测试设计项目职责，本 skill 不提前映射或替代。
 

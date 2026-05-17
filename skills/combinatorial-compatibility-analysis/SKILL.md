@@ -42,8 +42,8 @@ description: 当需求包含多选项、多平台、多渠道、多客户端版�
 
 如存在组合或兼容范围缺口，追加：
 
-| 问题ID | 检查点 | 来源阶段 | 问题 | 影响 | 阻塞级别 | priority | askPolicy | 关联需求依据 |
-|---|---|---|---|---|---|---|---|---|
+| 问题ID | checkpoint | sourceStage | header | question | why | impact | options | blockingLevel | priority | askPolicy | mustAsk | relatedRequirement | memoryConflict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
 ## 约束
 

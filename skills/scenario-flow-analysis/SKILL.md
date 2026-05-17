@@ -42,8 +42,8 @@ description: 当需求描述用户旅程、主流程、备选流程、异常流�
 
 如存在流程缺口，追加：
 
-| 问题ID | 检查点 | 来源阶段 | 问题 | 影响 | 阻塞级别 | priority | askPolicy | 关联需求依据 |
-|---|---|---|---|---|---|---|---|---|
+| 问题ID | checkpoint | sourceStage | header | question | why | impact | options | blockingLevel | priority | askPolicy | mustAsk | relatedRequirement | memoryConflict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
 ## 约束
 

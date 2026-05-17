@@ -42,8 +42,8 @@ description: 当需求提到角色、用户、组织、租户、资源、操作�
 
 如存在权限矩阵缺口，追加：
 
-| 问题ID | 检查点 | 来源阶段 | 问题 | 影响 | 阻塞级别 | priority | askPolicy | 关联需求依据 |
-|---|---|---|---|---|---|---|---|---|
+| 问题ID | checkpoint | sourceStage | header | question | why | impact | options | blockingLevel | priority | askPolicy | mustAsk | relatedRequirement | memoryConflict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
 ## 约束
 

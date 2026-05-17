@@ -194,7 +194,7 @@ flowchart TD
   D --> C2["CP-REQUIREMENT\nclarification-gate"]
   C2 --> E["测试分析维度与方法路由\ntesting-method-router"]
   E --> C3["CP-ROUTING\nclarification-gate"]
-  C3 --> F["专项测试方法分析\n风险 / 边界 / 状态 / 决策表 / 权限 / 接口 / 数据 / 兼容 / 可观测性"]
+  C3 --> F["专项测试方法分析\n风险 / 边界 / 状态 / 决策表 / 权限 / 接口 / 数据 / 兼容"]
   F --> EV["方法分析证据\nME-*"]
   EV --> C4["CP-METHOD\nclarification-gate"]
   C4 --> G["测试点生成\ntestpoint-generation"]
@@ -288,7 +288,6 @@ flowchart LR
   Router --> Interface["接口契约"]
   Router --> Data["数据一致性"]
   Router --> Combo["组合兼容"]
-  Router --> Observability["可观测性审计"]
 
   Risk --> Evidence["方法证据 ME-*"]
   Boundary --> Evidence
@@ -299,7 +298,6 @@ flowchart LR
   Interface --> Evidence
   Data --> Evidence
   Combo --> Evidence
-  Observability --> Evidence
   Evidence --> Points["测试点生成"]
 ```
 
@@ -315,7 +313,6 @@ flowchart LR
 | 接口与契约 | API、字段、响应、错误码、回调、外部系统 | 接口契约 | `interface-contract-analysis` | 必要性、置信度、说明 |
 | 数据一致性 | 库存、缓存、统计、导出、日志、异步同步 | 数据一致性 | `data-consistency-analysis` | 必要性、置信度、说明 |
 | 组合与兼容 | 多平台、多版本、多配置、多渠道、feature flag | 组合兼容 | `combinatorial-compatibility-analysis` | 必要性、置信度、说明 |
-| 非功能质量属性 | 日志、审计、告警、人工恢复、运维可见性 | 可观测性审计 | `risk-based-test-analysis`、`testpoint-generation` | 必要性、置信度、说明 |
 | 风险与优先级 | 资金、安全、不可逆、历史缺陷、高用户影响 | 风险驱动 | `risk-based-test-analysis` | 必要性、置信度、说明 |
 
 ## 10. Memory 设计
@@ -424,7 +421,7 @@ flowchart LR
 |---|---|---|
 | 记忆上下文包 | `memory-context-builder` | 注入本次相关的项目语境和测试经验，并在运行目录保留快照 |
 | 结构化需求模型 | `requirement-testability` | 提取模块、规则、状态、接口、权限和待确认问题 |
-| 澄清候选队列 | 各阶段 skill | 记录不确定项、影响、阻塞级别、优先级和提问策略 |
+| 澄清候选队列 | 各阶段 skill | 使用统一 `CQ-*` schema 记录标题、问题、原因、影响、选项、阻塞级别、优先级、提问策略、必问标记和关联依据 |
 | 澄清会话产物 | `clarification-gate` | 记录 AskUserQuestion 问题队列、未触发原因、用户回答、已解决问题和刷新后的未解决待确认问题 |
 | 测试分析维度与方法路由表 | `testing-method-router` | 决定每段需求从哪些分析维度审视并使用哪些测试理论 |
 | 方法分析证据摘要 | 专项测试方法 skills | 证明测试理论被实际应用，并关联测试点或待确认问题 |
@@ -498,7 +495,8 @@ flowchart TD
 | `semantic-quality-check.md` | 方法应用、风险备注、依据粒度和明细一致性是否达标 |
 | `bin/lint-testpoint-report.py` | 机械检查章节、表头、ID、类型、方法、禁用用例字段 |
 | `bin/semantic-testpoint-check.py` | 启发式检查方法覆盖、类型方法匹配、风险备注和依据质量 |
-| `bin/smoke-test-analysis.py` | 对示例需求执行结构 lint、语义检查和明细一致性回归 |
+| `bin/check-artifact-consistency.py` | 检查固定运行目录以及主交付件、过程报告、兼容明细之间的 `TP-*` / `ITP-*` 一致性 |
+| `bin/smoke-test-analysis.py` | 对固定 run 示例执行结构 lint、语义检查、跨产物一致性和明细一致性回归 |
 
 ## 13. 组件职责
 
@@ -630,7 +628,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md
 - 能输出接口测试清单和接口测试详情，接口契约不混入页面或业务场景。
 - 能输出刷新后的待确认信息。
 - 过程分析报告能输出测试分析维度与方法路由表、方法分析证据摘要、质量门禁结果、专家评分和建议沉淀的记忆更新项。
-- 示例主输出可通过 `bin/lint-testcase-design-input.py`，示例过程报告可通过 `bin/lint-testpoint-report.py`、`bin/semantic-testpoint-check.py` 和 `bin/smoke-test-analysis.py`。
+- 示例主输出可通过 `bin/lint-testcase-design-input.py`，示例固定 run 可通过 `bin/check-artifact-consistency.py`，示例过程报告可通过 `bin/lint-testpoint-report.py`、`bin/semantic-testpoint-check.py` 和 `bin/smoke-test-analysis.py`。
 
 ## 16. 当前假设
 

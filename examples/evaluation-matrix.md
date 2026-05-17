@@ -1,13 +1,13 @@
 # 示例评测矩阵
 
-本文件用于规划测试分析 Agent 的回归样例。每个样例都应包含输入需求、测试用例设计输入、过程报告和测试点明细，并通过 `bin/smoke-test-analysis.py`。
+本文件用于规划测试分析 Agent 的回归样例。每个样例都应包含输入需求，以及 `examples/outputs/runs/<stem>-run/` 下固定命名的测试用例设计输入、过程上下文、过程报告和测试点明细，并通过 `bin/smoke-test-analysis.py`。
 
 ## 已覆盖样例
 
 | 样例 | 主要能力 | 状态 |
 |---|---|---|
-| `sample-requirement.md` | 状态迁移、权限矩阵、数据一致性、接口契约、待确认问题 | 已覆盖 |
-| `complex-promotion-requirement.md` | 边界值、等价类、决策表、状态迁移、权限矩阵、接口契约、数据一致性、组合兼容、风险驱动 | 已覆盖 |
+| `sample-requirement.md` | 状态迁移、权限矩阵、数据一致性、接口契约、待确认问题 | 已覆盖，固定 run：`examples/outputs/runs/sample-requirement-run/` |
+| `complex-promotion-requirement.md` | 边界值、等价类、决策表、状态迁移、权限矩阵、接口契约、数据一致性、组合兼容、风险驱动 | 已覆盖，固定 run：`examples/outputs/runs/complex-promotion-requirement-run/` |
 
 ## 待补充样例
 
@@ -22,6 +22,7 @@
 ## 样例验收
 
 - 测试用例设计输入通过 `bin/lint-testcase-design-input.py`。
+- 固定 run 目录通过 `bin/check-artifact-consistency.py`。
 - 过程报告通过 `bin/lint-testpoint-report.py`。
 - 独立测试点明细通过 `bin/lint-testpoint-report.py`。
 - 过程报告通过 `bin/semantic-testpoint-check.py`。

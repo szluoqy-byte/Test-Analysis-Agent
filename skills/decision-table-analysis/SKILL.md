@@ -42,8 +42,8 @@ description: 当需求行为由多个条件、业务规则、开关、角色、�
 
 如存在规则组合缺口，追加：
 
-| 问题ID | 检查点 | 来源阶段 | 问题 | 影响 | 阻塞级别 | priority | askPolicy | 关联需求依据 |
-|---|---|---|---|---|---|---|---|---|
+| 问题ID | checkpoint | sourceStage | header | question | why | impact | options | blockingLevel | priority | askPolicy | mustAsk | relatedRequirement | memoryConflict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
 ## 约束
 

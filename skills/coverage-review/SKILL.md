@@ -32,11 +32,12 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 7. 执行 `testcase-design-input-check.md`，重点检查场景/条件/测试点/用例边界、测试类型合法性，以及设计方法是否泄漏到主输出。
 8. 执行 `semantic-quality-check.md`。
 9. 如果测试用例设计输入文件已生成，运行 `bin/lint-testcase-design-input.py ${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md` 做确定性结构校验。
-10. 如果过程分析报告已生成，运行 `bin/lint-testpoint-report.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 和 `bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 做过程报告校验。
-11. 使用 `knowledge/expert-review-rubric.md` 进行专家评分。
-12. 列出通过、警告和失败项。
-13. 对阻断报告发布且无法通过修正测试点解决的问题，登记 `CP-REVIEW` 澄清候选。
-14. 给出针对性修正建议。
+10. 运行 `bin/check-artifact-consistency.py ${PROJECT_ROOT}/outputs/runs/<run-id>`，检查固定运行目录和主交付件、过程报告、兼容明细之间的 `TP-*`/`ITP-*` 一致性。
+11. 如果过程分析报告已生成，运行 `bin/lint-testpoint-report.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 和 `bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 做过程报告校验。
+12. 使用 `knowledge/expert-review-rubric.md` 进行专家评分。
+13. 列出通过、警告和失败项。
+14. 对阻断报告发布且无法通过修正测试点解决的问题，登记 `CP-REVIEW` 澄清候选。
+15. 给出针对性修正建议。
 
 ## 判定规则
 

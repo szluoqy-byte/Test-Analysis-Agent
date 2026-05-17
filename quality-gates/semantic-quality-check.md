@@ -17,7 +17,7 @@
 - 设计输入是否自包含，是否把后续设计必须知道的业务规则、状态集合、角色权限、数据因子、接口契约和未解决问题写入主交付件。
 - 需求依据是否过于宽泛。
 - 风险备注是否过于泛化。
-- 方法证据是否使用 `ME-*` 格式并关联 `TP-*` 或 `Q-*`。
+- 方法证据是否使用 `ME-*` 格式并关联 `TP-*`、`ITP-*` 或 `Q-*`。
 - 质量门禁是否存在失败项。
 - 专家评分是否达到 `10/12`，且任一维度不得为 `0`。
 
@@ -25,6 +25,7 @@
 
 ```bash
 bin/lint-testcase-design-input.py ${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md
+bin/check-artifact-consistency.py ${PROJECT_ROOT}/outputs/runs/<run-id>
 bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md
 bin/smoke-test-analysis.py
 ```
@@ -38,6 +39,7 @@ bin/smoke-test-analysis.py
 - 设计输入把测试设计方法、具体数据、步骤或完整预期提前写入测试点。
 - 设计输入依赖“见原始需求”“按需求实现”“同上”等泛化占位，导致后续设计项目无法只基于主交付件开展用例设计。
 - 过程报告和设计输入中的测试点表达冲突。
+- 过程报告、兼容明细和主交付件中的 `TP-*`/`ITP-*` 不一致。
 - 质量门禁结果存在 `失败`。
 - 专家评分低于通过线或存在 0 分维度。
 

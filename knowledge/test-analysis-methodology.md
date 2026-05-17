@@ -25,7 +25,7 @@ Analysis 与后续 Design 是独立项目。Analysis 的主交付件是唯一跨
 | 接口与契约 | API、字段、错误码、鉴权、幂等、回调、超时、版本兼容 | `interface-contract-analysis` | 接口测试清单、接口测试详情、接口补充说明 |
 | 数据一致性 | 主数据、派生数据、缓存、统计、搜索、导出、日志、外部系统 | `data-consistency-analysis` | 数据因子、业务设计约束、数据一致性测试点 |
 | 组合与兼容 | 平台、版本、配置、渠道、语言地区、feature flag | `combinatorial-compatibility-analysis` | 测试数据因子、兼容性场景、关键组合测试点 |
-| 非功能质量属性 | 性能、可靠性、安全、易用性、可观测性、服务化、部署 | `risk-based-test-analysis`、`testpoint-generation` | 场景测试类型、专项场景、指标/约束/待确认信息 |
+| 非功能质量属性 | 性能、可靠性、安全、易用性、服务化、部署 | `risk-based-test-analysis`、`testpoint-generation` | 场景测试类型、专项场景、指标/约束/待确认信息 |
 | 经验与缺陷模式 | 历史缺陷、错误猜测、检查清单、缺陷分类 | `risk-based-test-analysis`、`knowledge/defect-patterns.md` | 风险/备注、补充测试点、待确认信息 |
 
 ## 方法与维度的关系

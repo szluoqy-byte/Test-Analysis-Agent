@@ -47,21 +47,6 @@ DETAIL_REQUIRED_SECTIONS = [
 TESTPOINT_HEADER = "| ID | 模块 | 测试点 | 类型 | 方法 | 需求依据 | 级别 | 风险/备注 |"
 EVIDENCE_HEADER = "| 证据ID | 方法 | 需求片段 | 分析结论 | 关联测试点/待确认 |"
 
-ALLOWED_TYPES = {
-    "功能正确性",
-    "业务规则",
-    "异常容错",
-    "边界值",
-    "状态迁移",
-    "权限角色",
-    "数据一致性",
-    "接口契约",
-    "兼容性",
-    "性能容量",
-    "安全风控",
-    "可观测性",
-}
-
 BANNED_COLUMNS = {"前置条件", "操作步骤", "测试数据", "预期结果"}
 HARD_STEP_WORDS = ("点击", "然后", "步骤", "断言", "执行用例")
 SOFT_STEP_WORDS = ("输入", "选择", "调用接口")
@@ -83,6 +68,24 @@ def split_row(line: str) -> list[str]:
     return [cell.strip() for cell in line.strip().strip("|").split("|")]
 
 
+def parse_bullet_section(path: Path, heading: str) -> set[str]:
+    values: set[str] = set()
+    in_section = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip() == heading:
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if in_section and line.startswith("- "):
+            values.add(line[2:].strip(" 。"))
+    return values
+
+
+def is_testpoint_id(value: str) -> bool:
+    return bool(re.fullmatch(r"(?:TP|ITP)-\d{3}", value))
+
+
 def collect_testpoint_rows(lines: list[str]) -> list[tuple[int, list[str]]]:
     rows: list[tuple[int, list[str]]] = []
     try:
@@ -98,7 +101,7 @@ def collect_testpoint_rows(lines: list[str]) -> list[tuple[int, list[str]]]:
         if len(cells) != 8:
             rows.append((index + 1, cells))
             continue
-        if cells[0].startswith("TP-"):
+        if is_testpoint_id(cells[0]):
             rows.append((index + 1, cells))
     return rows
 
@@ -133,6 +136,8 @@ def main() -> int:
         return 2
 
     report_path = Path(sys.argv[1])
+    repo_root = Path(__file__).resolve().parents[1]
+    allowed_types = parse_bullet_section(repo_root / "knowledge" / "testpoint-standard.md", "## 标准类型")
     text = report_path.read_text(encoding="utf-8")
     lines = text.splitlines()
     errors: list[str] = []
@@ -168,7 +173,7 @@ def main() -> int:
 
     rows = collect_testpoint_rows(lines)
     if not rows:
-        errors.append("测试点表中未找到 TP-* 行")
+        errors.append("测试点表中未找到 TP-* 或 ITP-* 行")
 
     evidence_rows = collect_evidence_rows(lines) if is_full_report else []
     if is_full_report and not evidence_rows:
@@ -192,10 +197,11 @@ def main() -> int:
         ]:
             if not value:
                 errors.append(f"第 {line_number} 行：方法证据必填字段为空: {name}")
-        if not ("TP-" in links or "Q-" in links):
-            warnings.append(f"第 {line_number} 行：方法证据建议关联 TP-* 或 Q-*: {links}")
+        if not ("TP-" in links or "ITP-" in links or "Q-" in links):
+            warnings.append(f"第 {line_number} 行：方法证据建议关联 TP-*、ITP-* 或 Q-*: {links}")
 
-    expected_id = 1
+    expected_tp_id = 1
+    expected_itp_id = 1
     for line_number, cells in rows:
         if len(cells) != 8:
             errors.append(f"第 {line_number} 行：期望 8 列，实际 {len(cells)} 列")
@@ -203,12 +209,16 @@ def main() -> int:
 
         test_id, module, testpoint, test_type, method, basis, level, risk_note = cells
 
-        expected = f"TP-{expected_id:03d}"
+        if test_id.startswith("ITP-"):
+            expected = f"ITP-{expected_itp_id:03d}"
+            expected_itp_id += 1
+        else:
+            expected = f"TP-{expected_tp_id:03d}"
+            expected_tp_id += 1
         if test_id != expected:
             errors.append(f"第 {line_number} 行：期望 ID {expected}，实际 {test_id}")
-        expected_id += 1
 
-        if test_type not in ALLOWED_TYPES:
+        if test_type not in allowed_types:
             errors.append(f"第 {line_number} 行：非法类型 {test_type}")
         if level not in {"Level 0", "Level 1", "Level 2", "Level 3", "Level 4"}:
             errors.append(f"第 {line_number} 行：非法级别 {level}")
@@ -227,8 +237,6 @@ def main() -> int:
             errors.append(f"第 {line_number} 行：测试点存在用例化表达: {testpoint}")
         if any(word in testpoint for word in SOFT_STEP_WORDS):
             warnings.append(f"第 {line_number} 行：请检查疑似步骤化表达: {testpoint}")
-        if not (testpoint.startswith("验证") or testpoint.startswith("检查")):
-            warnings.append(f"第 {line_number} 行：测试点建议以“验证”或“检查”开头: {testpoint}")
         if testpoint in VAGUE_TESTPOINTS or len(testpoint) < 12:
             warnings.append(f"第 {line_number} 行：测试点描述可能过于空泛，需体现被测对象、场景和验证特性: {testpoint}")
 

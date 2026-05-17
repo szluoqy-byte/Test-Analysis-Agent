@@ -7,11 +7,11 @@
 各阶段先产出候选问题，不直接触发交互。
 
 ```markdown
-| 问题ID | 检查点 | 来源阶段 | 问题 | 影响 | 阻塞级别 | 优先级 | 提问策略 | 建议选项 | 关联需求依据 |
-|---|---|---|---|---|---|---|---|---|---|
+| 问题ID | checkpoint | sourceStage | header | question | why | impact | options | blockingLevel | priority | askPolicy | mustAsk | relatedRequirement | memoryConflict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 ```
 
-`提问策略` 可取 `MustAsk`、`ShouldAsk` 或 `DoNotAsk`。`Blocking` 默认 `MustAsk`，高优先 `Important` 默认 `ShouldAsk`，`Optional` 默认 `DoNotAsk`。
+`问题ID` 使用 `CQ-001` 递增；`askPolicy` 可取 `MustAsk`、`ShouldAsk` 或 `DoNotAsk`。`Blocking` 默认 `MustAsk`，高优先 `Important/P1` 默认 `ShouldAsk`，`Optional` 默认 `DoNotAsk`。无 memory 冲突时 `memoryConflict` 填写 `无`。
 
 ## AskUserQuestion 问题结构
 
@@ -66,8 +66,8 @@
 
 ## 问题队列
 
-| 问题ID | 检查点 | 来源阶段 | 标题 | 问题 | 阻塞级别 | 优先级 | 提问策略 | 状态 | 关联需求依据 |
-|---|---|---|---|---|---|---|---|---|---|
+| 问题ID | checkpoint | sourceStage | header | question | why | impact | options | blockingLevel | priority | askPolicy | mustAsk | relatedRequirement | memoryConflict | 状态 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
 ## 未触发交互的问题
 

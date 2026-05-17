@@ -80,6 +80,11 @@ description: 在多个测试分析检查点使用。用于收集、去重、分�
 | relatedRequirement | 关联需求依据 |
 | memoryConflict | 如有冲突，说明冲突的 memory 来源 |
 
+统一候选表头如下，所有阶段必须按此 schema 输出 `CQ-*` 候选：
+
+| 问题ID | checkpoint | sourceStage | header | question | why | impact | options | blockingLevel | priority | askPolicy | mustAsk | relatedRequirement | memoryConflict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+
 字段填写规则：
 
 - `question` 必须能被用户直接回答，避免把多个互斥问题揉在一句话里。

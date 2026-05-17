@@ -45,3 +45,9 @@ outputs/
 - 过程报告中可以包含方法路由、方法证据、覆盖审查和专家评分，因此不再另行生成多份过程类 Markdown。
 - `process/` 只保留运行恢复和追溯必需文件。
 - `legacy/` 只在用户明确要求或旧工具链需要时生成。
+
+## 示例回归
+
+- 示例 fixtures 固定放在 `examples/outputs/runs/<stem>-run/`，目录内部仍使用本契约的 `deliverables/`、`process/`、`reports/`、`legacy/` 分类和固定文件名。
+- `bin/smoke-test-analysis.py` 只读取固定 run fixtures，不再依赖 `<需求文件名安全短名>.test-points.md` 或 `<需求文件名安全短名>.testpoint-details.md`。
+- `bin/check-artifact-consistency.py <run-dir>` 用于检查固定运行目录、主交付件、过程报告和兼容明细之间的 `TP-*` / `ITP-*` 一致性。

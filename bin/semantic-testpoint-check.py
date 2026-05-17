@@ -28,12 +28,15 @@ TYPE_METHOD_HINTS = {
     "接口契约": {"接口契约"},
     "数据一致性": {"数据一致性", "状态迁移", "接口契约"},
     "兼容性": {"组合兼容"},
-    "可观测性": {"可观测性审计"},
 }
 
 
 def split_row(line: str) -> list[str]:
     return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+
+def is_testpoint_id(value: str) -> bool:
+    return bool(re.fullmatch(r"(?:TP|ITP)-\d{3}", value))
 
 
 def collect_table(lines: list[str], header: str) -> list[tuple[int, list[str]]]:
@@ -154,11 +157,11 @@ def main() -> int:
             warnings.append(f"第 {line_number} 行：方法证据中的方法 `{method}` 未出现在知识标准方法中")
         if not fragment or not conclusion or not links:
             errors.append(f"第 {line_number} 行：方法证据存在空字段")
-        if "TP-" not in links and "Q-" not in links:
-            warnings.append(f"第 {line_number} 行：方法证据未关联 TP-* 或 Q-*")
+        if "TP-" not in links and "ITP-" not in links and "Q-" not in links:
+            warnings.append(f"第 {line_number} 行：方法证据未关联 TP-*、ITP-* 或 Q-*")
 
     for line_number, cells in testpoint_rows:
-        if len(cells) != 8 or not cells[0].startswith("TP-"):
+        if len(cells) != 8 or not is_testpoint_id(cells[0]):
             continue
         test_id, module, testpoint, test_type, method, basis, level, risk_note = cells
         covered_methods.add(method)

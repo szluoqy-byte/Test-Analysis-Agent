@@ -69,3 +69,4 @@
 - 主交付件路径固定为 `${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md`。
 - 过程文件路径固定为 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md` 和 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/clarification-session.md`。
 - 本报告可包含测试点明细、方法证据和质量门禁结果；不要再额外生成 `<需求文件名安全短名>.test-points.md`。
+- 测试点明细中的场景测试点使用 `TP-*`，接口测试点使用 `ITP-*`；二者必须与主交付件中的测试点保持同 ID、同文案、同级别和同风险备注。
