@@ -164,6 +164,13 @@
 - 更新设计文档、主入口 skill 和澄清规则，将流程真相收敛到 `analyze-requirement-testpoints` 主入口 skill。
 - 保留历史评审记录中的 Agent 演进说明，作为架构收敛过程的追溯信息。
 
+## 第 16 轮 Claude Code / OpenCode 双入口兼容
+
+- 参考 Test-Design-Agent 的项目结构，新增 `AGENTS.md`、`CLAUDE.md`、`opencode.json` 和 `.opencode/commands/analyze-requirement-testpoints.md`。
+- 新增 `bin/sync-opencode-skills.py`，将根目录 `skills/` 同步为 `.opencode/skills/` 镜像，并保持 `skills/` 为唯一手工维护源。
+- 新增 `bin/validate-agent-runtime.py`，校验 Claude Code manifest、OpenCode 配置、命令入口、skill frontmatter 和镜像一致性。
+- 更新主入口 skill、设计文档、smoke 检查和忽略规则，使 `PROJECT_ROOT` 与运行产物规则同时适配 Claude Code 和 OpenCode。
+
 ## 当前验收标准
 
 - 最终报告包含测试方法路由表。
@@ -179,6 +186,7 @@
 - 专家评分总分至少 `10/12`，且任一维度不得为 `0`；若阻塞来自需求缺失，必须输出待确认问题。
 - 示例集必须通过 `bin/smoke-test-analysis.py`。
 - 示例回归必须使用 `examples/outputs/runs/<stem>-run/` 固定目录，并通过 `bin/check-artifact-consistency.py` 校验跨产物一致性。
+- Runtime wiring 必须通过 `bin/validate-agent-runtime.py`，OpenCode skill 镜像必须通过 `bin/sync-opencode-skills.py --check`。
 
 ## 剩余注意事项
 

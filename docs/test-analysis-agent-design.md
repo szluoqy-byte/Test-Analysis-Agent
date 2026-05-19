@@ -4,7 +4,7 @@
 
 本文描述测试分析 Agent 的系统架构、运行流程、组件职责和质量闭环。该 Agent 面向 Markdown 需求文档，目标是模拟测试专家的分析过程，输出后续独立测试设计项目可直接消费的“测试用例设计输入”，而不是测试用例、测试步骤或自动化脚本。
 
-设计优先适配 Claude Code plugin / skills 体系，同时保持核心知识、方法和模板平台无关，后续可增加 OpenClaw 适配层。
+设计优先适配 Claude Code plugin / skills 和 OpenCode project / skills / commands 体系，同时保持核心知识、方法和模板平台无关。
 
 ## 2. 设计目标与边界
 
@@ -38,7 +38,7 @@
 | 记忆可控注入 | 每次分析只生成相关记忆上下文包，不全量注入 memory |
 | 输出非用例化 | 测试点是对验证特性的细化，描述被测对象在特定场景下的某一功能，不写前置条件、步骤、数据和完整预期 |
 | 质量闭环 | 生成后必须经过覆盖、追踪、方法应用、风险级别和结构校验 |
-| 平台薄适配 | Claude Code / OpenClaw 只作为运行容器，核心测试逻辑沉淀在 Markdown 文件中 |
+| 平台薄适配 | Claude Code / OpenCode 只作为运行容器，核心测试逻辑沉淀在 Markdown 文件中 |
 
 ## 4. 系统上下文视图
 
@@ -63,6 +63,14 @@ flowchart LR
 test-analysis-agent/
 ├── .claude-plugin/
 │   └── plugin.json
+├── .opencode/
+│   ├── commands/
+│   │   └── analyze-requirement-testpoints.md
+│   └── skills/
+│       └── <generated from skills/>
+├── AGENTS.md
+├── CLAUDE.md
+├── opencode.json
 ├── skills/
 │   ├── analyze-requirement-testpoints/
 │   ├── testing-method-router/
@@ -90,6 +98,13 @@ test-analysis-agent/
 ├── templates/
 ├── quality-gates/
 ├── bin/
+│   ├── lint-testpoint-report.py
+│   ├── lint-testcase-design-input.py
+│   ├── semantic-testpoint-check.py
+│   ├── check-artifact-consistency.py
+│   ├── smoke-test-analysis.py
+│   ├── sync-opencode-skills.py
+│   └── validate-agent-runtime.py
 ├── examples/
 └── outputs/
     └── runs/
@@ -110,21 +125,34 @@ test-analysis-agent/
 | 目录 | 职责 |
 |---|---|
 | `.claude-plugin/` | Claude Code plugin manifest |
-| `skills/` | 测试分析方法能力，负责具体分析动作 |
+| `.opencode/` | OpenCode 命令和 skill 发现目录；其中 `.opencode/skills/` 由 `skills/` 同步生成 |
+| `AGENTS.md` | OpenCode 项目规则入口 |
+| `CLAUDE.md` | Claude Code 项目规则入口 |
+| `opencode.json` | OpenCode 项目配置，声明 schema 和 skill 权限 |
+| `skills/` | 测试分析方法能力，是手工维护的 skill 唯一事实源 |
 | `knowledge/` | 稳定专家知识、缺陷模式、测试标准、覆盖体系 |
 | `memory/` | 经人工确认的项目上下文、领域事实和测试经验 |
 | `templates/` | 中间产物、设计输入和过程报告格式 |
 | `quality-gates/` | Agent 可读的质量门禁规则 |
-| `bin/` | 可机械执行的结构 lint、语义启发式检查和 smoke 回归脚本 |
+| `bin/` | 可机械执行的结构 lint、语义启发式检查、runtime 适配校验和 smoke 回归脚本 |
 | `examples/` | 回归样例需求和输出 |
 | `outputs/` | 基于项目根目录保存的运行产物、测试用例设计输入和过程分析报告 |
 
-### 5.2 Claude Code 插件兼容性
+### 5.2 Claude Code 与 OpenCode 兼容性
 
-本仓库采用 Claude Code plugin 结构：
+本仓库采用 Claude Code plugin 与 OpenCode project 双入口结构：
 
-- `.claude-plugin/plugin.json` 是插件 manifest，声明插件名称、版本和技能目录。
-- `skills/<skill-name>/SKILL.md` 是插件技能，启用插件后可作为命名空间 skill 使用。
+- Claude Code 通过 `.claude-plugin/plugin.json` 直接加载根目录 `skills/`。
+- OpenCode 通过 `opencode.json`、`.opencode/commands/analyze-requirement-testpoints.md` 和 `.opencode/skills/` 发现项目能力。
+- `skills/<skill-name>/SKILL.md` 是唯一手工维护的 skill 源。
+- `.opencode/skills/` 是由 `bin/sync-opencode-skills.py` 从 `skills/` 生成的镜像，不作为人工维护入口。
+
+修改任何 `skills/*/SKILL.md` 后，必须重新运行：
+
+```text
+python bin/sync-opencode-skills.py
+python bin/validate-agent-runtime.py
+```
 
 调用建议：
 
@@ -415,7 +443,7 @@ flowchart LR
 
 ### 11.2 运行目录
 
-每次分析必须先固定 `PROJECT_ROOT`，再创建独立运行目录，避免多次执行覆盖历史产物。`PROJECT_ROOT` 的规则是：使用用户启动 Claude Code 或当前 Claude Code 会话所在的工作目录。需求文档路径只用于读取需求，不用于反推项目根目录。
+每次分析必须先固定 `PROJECT_ROOT`，再创建独立运行目录，避免多次执行覆盖历史产物。`PROJECT_ROOT` 的规则是：使用用户启动 Claude Code、OpenCode 或当前 agent 会话所在的工作目录。需求文档路径只用于读取需求，不用于反推项目根目录。
 
 ```text
 ${PROJECT_ROOT}/outputs/runs/<run-id>/
@@ -432,7 +460,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/
 
 `run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。run 目录用于区分历史批次，run 内文件名必须固定，避免不同模型或环境生成不同文件名影响下游消费。`deliverables/testcase-design-input.md` 是唯一跨项目交付件；`process/context-pack.md` 是该 run 的上下文快照；`process/clarification-session.md` 只在发生澄清或需要记录未触发原因时生成；`reports/test-analysis-report.md` 是可选过程审查报告；`legacy/testpoint-details.md` 仅用于兼容旧流程，不默认生成。当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件必须使用 `${PROJECT_ROOT}` 下的绝对路径。
 
-不得在 `skills/`、`.claude-plugin/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。如果当前工作目录明显是这些禁止目录，必须先向用户确认正确工作目录，不得继续生成产物。后续阶段不得重新解析、搜索或修正 `PROJECT_ROOT`。
+不得在 `skills/`、`.claude-plugin/`、`.opencode/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。如果当前工作目录明显是这些禁止目录，必须先向用户确认正确工作目录，不得继续生成产物。后续阶段不得重新解析、搜索或修正 `PROJECT_ROOT`。
 
 ## 12. 质量闭环视图
 
@@ -480,6 +508,8 @@ flowchart TD
 | `bin/semantic-testpoint-check.py` | 启发式检查方法覆盖、类型方法匹配、风险备注和依据质量 |
 | `bin/check-artifact-consistency.py` | 检查固定运行目录以及主交付件、过程报告、兼容明细之间的 `TP-*` / `ITP-*` 一致性 |
 | `bin/smoke-test-analysis.py` | 对固定 run 示例执行结构 lint、语义检查、跨产物一致性和明细一致性回归 |
+| `bin/sync-opencode-skills.py` | 将根目录 `skills/` 同步到 `.opencode/skills/`，并校验 OpenCode skill frontmatter |
+| `bin/validate-agent-runtime.py` | 校验 Claude Code manifest、OpenCode 配置、命令入口和 skill 镜像一致性 |
 
 ## 13. 组件职责
 
@@ -609,8 +639,8 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md
 - v1 只处理单个 Markdown 需求文档。
 - v1 memory 使用 Markdown 文件维护。
 - v1 memory 更新需要人工确认。
-- v1 优先适配 Claude Code plugin / skills。
-- OpenClaw 兼容通过后续适配层实现，不重写核心架构。
+- v1 优先适配 Claude Code plugin / skills 和 OpenCode project / skills / commands。
+- OpenCode 的 skill 镜像由 `skills/` 生成，不单独维护另一套流程。
 
 ## 17. 参考
 

@@ -1,3 +1,8 @@
 .DS_Store
 __pycache__/
 *.py[cod]
+outputs/runs/*
+!outputs/runs/.gitkeep
+outputs/temp/
+memory/domains/*
+!memory/domains/README.md

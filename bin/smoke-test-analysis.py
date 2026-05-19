@@ -14,7 +14,12 @@ EXAMPLE_RUN_SUFFIX = "-run"
 REQUIRED_FILES = [
     ".editorconfig",
     ".gitattributes",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "opencode.json",
     ".claude-plugin/plugin.json",
+    ".opencode/commands/analyze-requirement-testpoints.md",
+    ".opencode/skills/README.md",
     "docs/test-analysis-agent-design.md",
     "docs/knowledge-skill-memory-boundaries.md",
     "docs/output-artifact-contract.md",
@@ -42,6 +47,8 @@ REQUIRED_FILES = [
     "bin/lint-testcase-design-input.py",
     "bin/semantic-testpoint-check.py",
     "bin/check-artifact-consistency.py",
+    "bin/sync-opencode-skills.py",
+    "bin/validate-agent-runtime.py",
 ]
 
 
