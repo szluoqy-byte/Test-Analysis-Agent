@@ -13,7 +13,7 @@ REQUIRED_SECTIONS = [
     "## 1. 分析范围",
     "## 2. 记忆上下文包摘要",
     "## 3. 需求结构化摘要",
-    "## 4. 交互澄清摘要",
+    "## 4. 待确认治理摘要",
     "## 5. 测试方法路由",
     "## 6. 方法分析证据摘要",
     "## 7. 待确认问题",
@@ -61,6 +61,7 @@ VAGUE_TESTPOINTS = {
 ROUTE_SECTION_ALIASES = {
     "## 5. 测试方法路由": "## 5. 测试分析维度与方法路由",
     "## 4. 测试方法路由": "## 4. 测试分析维度与方法路由",
+    "## 4. 待确认治理摘要": "## 4. 交互澄清摘要",
 }
 
 
@@ -146,7 +147,7 @@ def main() -> int:
     is_full_report = "## 1. 分析范围" in text
     required_sections = DETAIL_REQUIRED_SECTIONS
     if is_full_report:
-        if "## 4. 交互澄清摘要" in text:
+        if "## 4. 交互澄清摘要" in text or "## 4. 待确认治理摘要" in text:
             required_sections = REQUIRED_SECTIONS
         else:
             required_sections = LEGACY_REQUIRED_SECTIONS

@@ -215,14 +215,8 @@ flowchart TD
   C4 --> G["测试点生成\ntestpoint-generation"]
   G --> H["覆盖审查 / 质量门禁 / 专家评分\ncoverage-review"]
   H --> C5["CP-REVIEW\nclarification-gate"]
-  C1 -. 按需澄清 .-> AUQ["AskUserQuestion\n用户选择或自定义回答"]
-  C2 -.-> AUQ
-  C3 -.-> AUQ
-  C4 -.-> AUQ
-  C5 -.-> AUQ
-  AUQ --> CS["澄清会话产物\n${PROJECT_ROOT}/outputs/runs/<run-id>"]
-  CS --> Resume["合并本次上下文\n返回触发它的检查点"]
-  C5 --> J["确定性检查\nlint / semantic"]
+  C5 --> QF["刷新最终待确认信息\n写入主交付件第 6 章"]
+  QF --> J["确定性检查\nlint / semantic"]
   J --> K{"是否通过"}
   K -- "通过" --> L["输出测试用例设计输入"]
   K -- "输出质量问题" --> G
@@ -234,7 +228,7 @@ flowchart TD
 
 ## 8. 主流程视图
 
-以下时序以主入口 skill 为准。主 skill 负责串联各阶段 skill，并统一管理检查点、产物路径、澄清规则和质量门禁。
+以下时序以主入口 skill 为准。主 skill 负责串联各阶段 skill，并统一管理检查点、产物路径、待确认问题和质量门禁；分析过程中不打断用户。
 
 ```mermaid
 sequenceDiagram
@@ -242,7 +236,7 @@ sequenceDiagram
   participant E as 主入口 Skill
   participant M as 记忆上下文 Skill
   participant R as 需求结构化 Skill
-  participant C as 澄清闸门 Skill
+  participant C as 待确认治理 Skill
   participant T as 方法路由 Skill
   participant S as 专项方法 Skills
   participant G as 测试点生成 Skill
@@ -252,29 +246,23 @@ sequenceDiagram
   U->>E: 提供 Markdown 需求文档
   E->>E: 固定当前会话工作目录为 PROJECT_ROOT / 创建 run 目录
   E->>M: 选择相关 memory 并生成 context-pack
-  E->>C: CP-MEMORY 收集 memory 澄清候选
+  E->>C: CP-MEMORY 收集 memory 待确认候选
   E->>R: 分析需求结构和可测性
   R-->>E: 结构化需求模型 / 待确认问题 / 方法触发信号
-  E->>C: CP-REQUIREMENT 去重、分级、限流候选问题
-  Note over E,C: CP-MEMORY、CP-ROUTING、CP-METHOD、CP-REVIEW 也按同一澄清规则处理
-  alt 存在 P0/MustAsk 或 P1/ShouldAsk 问题
-    C-->>U: AskUserQuestion 交互提问
-    U-->>C: 选择选项或自定义回答
-    C-->>E: 澄清答案 / 待确认风险 / 会话产物
-  else 无必要交互
-    C-->>E: 记录未触发原因并继续
-  end
+  E->>C: CP-REQUIREMENT 去重、分级、排序候选问题
+  Note over E,C: CP-MEMORY、CP-ROUTING、CP-METHOD、CP-REVIEW 只收集和治理候选，不向用户提问
   E->>T: 为需求片段选择测试理论方法
-  T-->>E: 分析维度与方法路由表 / 置信度 / 范围澄清候选
+  T-->>E: 分析维度与方法路由表 / 置信度 / 范围待确认候选
   E->>C: CP-ROUTING 处理高优先范围类候选
   E->>S: 调用必要专项方法并生成 ME-* 证据
-  S-->>E: 方法分析证据 / 方法缺口澄清候选
+  S-->>E: 方法分析证据 / 方法缺口待确认候选
   E->>C: CP-METHOD 处理高风险方法缺口
   E->>G: 生成测试用例设计输入
   G-->>E: 场景化测试点 / 接口测试点 / 待确认风险
   E->>Q: 执行覆盖审查、质量门禁和专家评分
   Q-->>E: 审查结果 / 专家评分 / 修正建议
-  E->>C: CP-REVIEW 只处理阻断报告发布的问题
+  E->>C: CP-REVIEW 收口最终待确认问题
+  C-->>E: Q-* 待确认信息 / 降级风险备注 / 过程记录
   E->>L: 执行结构和语义启发式校验
   L-->>E: 通过 / 失败
   E-->>U: 测试用例设计输入 / 过程分析报告 / memory 更新建议
@@ -343,7 +331,7 @@ Memory 不保存：
 
 - 通用测试理论和通用缺陷模式。稳定知识放在 `knowledge/`，分析动作放在 `skills/`。
 - 未确认的业务规则。未确认内容应放在“待确认问题”或“建议沉淀的 Memory 更新”。
-- 单次运行的完整中间产物。context pack、澄清会话、结构化需求模型、设计输入草稿和审查结果归属 `outputs/`。
+- 单次运行的完整中间产物。context pack、待确认治理记录、结构化需求模型、设计输入草稿和审查结果归属 `outputs/`。
 
 ### 10.2 Memory 文件结构
 
@@ -416,12 +404,13 @@ flowchart LR
   H --> I["专家评审评分"]
   I --> J["过程分析报告"]
   F --> DTL["后续设计输入文件"]
-  B --> CQ["澄清候选队列"]
+  B --> CQ["待确认候选队列"]
   C --> CQ
   D --> CQ
   E --> CQ
   G --> CQ
-  CQ --> CS["澄清会话产物"]
+  CQ --> CS["待确认治理记录"]
+  CS --> F
   CS --> J
   J --> K["记忆更新建议"]
 ```
@@ -432,8 +421,8 @@ flowchart LR
 |---|---|---|
 | 记忆上下文包 | `memory-context-builder` | 注入本次相关的项目语境和测试经验，并在运行目录保留快照 |
 | 结构化需求模型 | `requirement-testability` | 提取模块、规则、状态、接口、权限和待确认问题 |
-| 澄清候选队列 | 各阶段 skill | 使用统一 `CQ-*` schema 记录标题、问题、原因、影响、选项、阻塞级别、优先级、提问策略、必问标记和关联依据 |
-| 澄清会话产物 | `clarification-gate` | 记录 AskUserQuestion 问题队列、未触发原因、用户回答、已解决问题和刷新后的未解决待确认问题 |
+| 待确认候选队列 | 各阶段 skill | 使用统一 `CQ-*` schema 记录标题、问题、原因、影响、选项、阻塞级别、优先级和关联依据 |
+| 待确认治理记录 | `clarification-gate` | 记录候选问题、去重降级结果和最终进入主交付件的 `Q-*` 待确认问题 |
 | 测试分析维度与方法路由表 | `testing-method-router` | 决定每段需求从哪些分析维度审视并使用哪些测试理论 |
 | 方法分析证据摘要 | 专项测试方法 skills | 证明测试理论被实际应用，并关联测试点或待确认问题 |
 | 测试用例设计输入 | `testpoint-generation` | 输出场景化测试点、场景测试条件、接口清单和接口测试点 |
@@ -458,7 +447,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/
     └── testpoint-details.md
 ```
 
-`run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。run 目录用于区分历史批次，run 内文件名必须固定，避免不同模型或环境生成不同文件名影响下游消费。`deliverables/testcase-design-input.md` 是唯一跨项目交付件；`process/context-pack.md` 是该 run 的上下文快照；`process/clarification-session.md` 只在发生澄清或需要记录未触发原因时生成；`reports/test-analysis-report.md` 是可选过程审查报告；`legacy/testpoint-details.md` 仅用于兼容旧流程，不默认生成。当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件必须使用 `${PROJECT_ROOT}` 下的绝对路径。
+`run-id` 格式为 `<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`。run 目录用于区分历史批次，run 内文件名必须固定，避免不同模型或环境生成不同文件名影响下游消费。`deliverables/testcase-design-input.md` 是唯一跨项目交付件；`process/context-pack.md` 是该 run 的上下文快照；`process/clarification-session.md` 只在存在待确认候选并需要保留治理记录时生成；`reports/test-analysis-report.md` 是可选过程审查报告；`legacy/testpoint-details.md` 仅用于兼容旧流程，不默认生成。当前任务内继续修改时复用同一运行目录，历史追溯以对应 run 目录为准。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件必须使用 `${PROJECT_ROOT}` 下的绝对路径。
 
 不得在 `skills/`、`.claude-plugin/`、`.opencode/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。如果当前工作目录明显是这些禁止目录，必须先向用户确认正确工作目录，不得继续生成产物。后续阶段不得重新解析、搜索或修正 `PROJECT_ROOT`。
 
@@ -519,7 +508,7 @@ flowchart TD
 |---|---|
 | 主入口 | `analyze-requirement-testpoints` |
 | 需求理解 | `requirement-testability` |
-| 交互澄清 | `clarification-gate` |
+| 待确认治理 | `clarification-gate` |
 | 方法路由 | `testing-method-router` |
 | 风险分析 | `risk-based-test-analysis` |
 | 测试理论 | `boundary-equivalence-analysis`、`state-transition-analysis`、`decision-table-analysis`、`scenario-flow-analysis`、`permission-role-analysis`、`interface-contract-analysis`、`data-consistency-analysis`、`combinatorial-compatibility-analysis` |
@@ -552,7 +541,7 @@ flowchart TD
 | `testcase-design-input-template.md` | 后续独立测试设计项目主输入模板 |
 | `testpoint-output-template.md` | 兼容保留的独立测试点明细模板 |
 | `method-analysis-template.md` | 方法分析证据摘要模板 |
-| `clarification-template.md` | AskUserQuestion 澄清问题和会话产物模板 |
+| `clarification-template.md` | 待确认候选治理记录模板 |
 | `coverage-review-template.md` | 覆盖审查模板 |
 | `memory-update-proposal-template.md` | Memory 更新建议模板 |
 | `final-report-template.md` | 过程分析报告模板 |
@@ -572,7 +561,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md
 ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md
 ```
 
-澄清会话路径：
+待确认治理记录路径：
 
 ```text
 ${PROJECT_ROOT}/outputs/runs/<run-id>/process/clarification-session.md
@@ -600,7 +589,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md
 ## 7. 输入完整性自检
 ```
 
-`待确认信息` 必须在所有交互澄清完成后刷新，只保留后续设计可执行用例时必须知道的问题；已被用户回答、已被上下文覆盖或重复的问题不得出现在主输出中。
+`待确认信息` 必须在最终输出前刷新，只保留后续设计可执行用例时必须知道的问题；已被需求、上下文、场景条件、接口说明、风险备注覆盖或重复的问题不得出现在主输出中。
 
 场景测试点字段：
 

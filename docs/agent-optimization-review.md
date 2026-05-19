@@ -171,6 +171,13 @@
 - 新增 `bin/validate-agent-runtime.py`，校验 Claude Code manifest、OpenCode 配置、命令入口、skill frontmatter 和镜像一致性。
 - 更新主入口 skill、设计文档、smoke 检查和忽略规则，使 `PROJECT_ROOT` 与运行产物规则同时适配 Claude Code 和 OpenCode。
 
+## 第 17 轮待确认问题非交互收口
+
+- 将澄清流程从“分析过程中按优先级提问”调整为“全流程只收集待确认候选，最终统一写入主交付件”。
+- 更新 `clarification-gate` 为待确认问题治理 skill，负责候选收集、去重、分级、降级和最终 `Q-*` 输出，不再调用用户交互能力。
+- 更新主入口 skill、专项 skill、模板、质量门禁和设计文档，明确中间阶段不打断用户，后续设计必须知道的问题统一展示在 `deliverables/testcase-design-input.md` 的 `## 6. 待确认信息`。
+- 保留 `process/clarification-session.md` 作为待确认治理过程记录，主交付件仍是唯一跨项目消费入口。
+
 ## 当前验收标准
 
 - 最终报告包含测试方法路由表。

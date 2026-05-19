@@ -27,7 +27,7 @@ outputs/
 |---|---|---|---|
 | 主交付件 | `deliverables/testcase-design-input.md` | 是 | 唯一跨项目交接物，供后续独立测试设计项目消费 |
 | 过程上下文 | `process/context-pack.md` | 是 | 当前 run 筛选出的 memory 和项目上下文快照 |
-| 澄清记录 | `process/clarification-session.md` | 有澄清候选时生成 | 记录澄清候选、触发决策、用户回答和未解决问题 |
+| 待确认治理记录 | `process/clarification-session.md` | 有待确认候选时生成 | 记录候选问题、去重降级结果和最终待确认问题；最终展示以主交付件 `## 6. 待确认信息` 为准 |
 | 过程报告 | `reports/test-analysis-report.md` | 可选 | Analysis 内部审查、追溯和质量门禁报告 |
 | 兼容明细 | `legacy/testpoint-details.md` | 默认不生成 | 仅为旧流程、表格导入或人工审查兼容保留 |
 

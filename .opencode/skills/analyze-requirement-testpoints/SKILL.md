@@ -1,6 +1,6 @@
 ---
 name: analyze-requirement-testpoints
-description: 当用户要求基于单个 Markdown 需求文档生成后续独立测试设计项目可消费的测试用例设计输入时使用。该 skill 是主入口，负责串联记忆上下文、需求结构化、交互澄清、测试方法路由、场景化测试点生成、覆盖审查和设计输入输出；入参来自 $ARGUMENTS。
+description: 当用户要求基于单个 Markdown 需求文档生成后续独立测试设计项目可消费的测试用例设计输入时使用。该 skill 是主入口，负责串联记忆上下文、需求结构化、待确认问题治理、测试方法路由、场景化测试点生成、覆盖审查和设计输入输出；入参来自 $ARGUMENTS。
 ---
 
 # 需求测试点分析主入口
@@ -37,18 +37,18 @@ Analysis 项目与后续 Design 项目相互独立；主交付物必须自包含
 
 所有运行产物必须写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/` 下的固定类别目录，具体契约见 `docs/output-artifact-contract.md`。报告中可以展示相对路径 `outputs/runs/<run-id>/...`，但实际写文件时必须使用基于 `PROJECT_ROOT` 的绝对路径。
 
-`run-id` 只在一次新的完整分析开始时生成一次。同一轮分析内的后续修正、澄清回答处理、质量门禁重跑和报告刷新，必须复用已经创建的运行目录。如果用户明确要求“继续上次结果修改”或提供了已有运行目录，优先复用该目录；只有用户要求重新分析或无法确认已有运行目录属于当前需求时，才创建新的 `run-id`。
+`run-id` 只在一次新的完整分析开始时生成一次。同一轮分析内的后续修正、待确认问题刷新、质量门禁重跑和报告刷新，必须复用已经创建的运行目录。如果用户明确要求“继续上次结果修改”或提供了已有运行目录，优先复用该目录；只有用户要求重新分析或无法确认已有运行目录属于当前需求时，才创建新的 `run-id`。
 
 ## 执行流程
 
 1. 校验输入必须是单个 Markdown 文件。
 2. 将当前 agent 会话工作目录固定为 `PROJECT_ROOT`，生成本次运行 ID：`<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`，并创建 `${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/`、`process/`、`reports/` 和按需 `legacy/`。
-3. 使用 `memory-context-builder` 生成本次运行的 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`，并登记可能的 memory 澄清候选。
-4. 在 `CP-MEMORY` 检查点使用 `clarification-gate`；memory 冲突影响需求理解时优先触发 `AskUserQuestion`。
-5. 使用 `requirement-testability` 生成结构化需求模型，并按 `knowledge/test-analysis-methodology.md` 标记需求片段涉及的测试分析维度，登记业务规则、状态、权限、边界和接口契约澄清候选。
-6. 在 `CP-REQUIREMENT` 检查点必须使用 `clarification-gate`；这是主要澄清点，必须形成候选队列、触发决策和未触发原因。若存在 `P0/P1` 的 `MustAsk` 或 `ShouldAsk`，必须在主会话触发 `AskUserQuestion`。
-7. 使用 `testing-method-router` 先判断每个需求片段涉及的分析维度，再选择适用测试方法，并登记影响方法必要性的澄清候选。
-8. 在 `CP-ROUTING` 检查点使用 `clarification-gate`；性能、安全、兼容等高优先范围问题应作为 `ShouldAsk` 提问，除非已有明确依据或已被用户回答。
+3. 使用 `memory-context-builder` 生成本次运行的 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`，并登记可能的 memory 待确认候选。
+4. 在 `CP-MEMORY` 检查点使用 `clarification-gate`；memory 冲突影响需求理解时登记为待确认候选，不中途提问。
+5. 使用 `requirement-testability` 生成结构化需求模型，并按 `knowledge/test-analysis-methodology.md` 标记需求片段涉及的测试分析维度，登记业务规则、状态、权限、边界和接口契约待确认候选。
+6. 在 `CP-REQUIREMENT` 检查点必须使用 `clarification-gate`；这是主要待确认收集点，必须形成候选队列、去重排序结果和最终保留原因。即使存在 `P0/P1` 问题，也不得中途打断用户。
+7. 使用 `testing-method-router` 先判断每个需求片段涉及的分析维度，再选择适用测试方法，并登记影响方法必要性的待确认候选。
+8. 在 `CP-ROUTING` 检查点使用 `clarification-gate`；性能、安全、兼容等高优先范围问题如果缺少依据，进入最终待确认候选。
 9. 按方法路由调用必要的专项 skill：
    - `risk-based-test-analysis`
    - `boundary-equivalence-analysis`
@@ -59,12 +59,12 @@ Analysis 项目与后续 Design 项目相互独立；主交付物必须自包含
    - `interface-contract-analysis`
    - `data-consistency-analysis`
    - `combinatorial-compatibility-analysis`
-10. 汇总专项 skill 产出的 `ME-*` 方法分析证据，并登记专项方法缺口澄清候选。
-11. 在 `CP-METHOD` 检查点使用 `clarification-gate`；优先确认会导致决策表、状态图、权限矩阵或接口契约失真的缺口。
+10. 汇总专项 skill 产出的 `ME-*` 方法分析证据，并登记专项方法缺口待确认候选。
+11. 在 `CP-METHOD` 检查点使用 `clarification-gate`；会导致决策表、状态图、权限矩阵或接口契约失真的缺口必须进入最终待确认候选。
 12. 使用 `testpoint-generation` 基于方法证据生成场景化测试用例设计输入：先识别测试场景，再补齐场景测试条件、场景测试点、接口测试清单和接口测试点；原则上不在本阶段打断用户，缺口写为待确认风险点。
-13. 使用 `coverage-review` 执行覆盖审查、质量门禁和专家评分，并登记阻断报告发布的澄清候选。
-14. 在 `CP-REVIEW` 检查点使用 `clarification-gate`；默认不触发，仅当用户确认后才能安全发布报告时提问，并记录未触发原因。
-15. 根据澄清会话、结构化需求模型、方法证据和覆盖审查结果，刷新最终“待确认问题”：移除已回答或已覆盖的问题，只保留未解决问题和暂不确认风险。
+13. 使用 `coverage-review` 执行覆盖审查、质量门禁和专家评分，并登记阻断报告发布的待确认候选。
+14. 在 `CP-REVIEW` 检查点使用 `clarification-gate`；对仍会影响交付可用性的缺口做最终收口，不提问、不暂停。
+15. 根据待确认候选、结构化需求模型、方法证据和覆盖审查结果，刷新最终“待确认问题”：移除已覆盖和重复的问题，只保留后续用例设计必须知道的未解决问题。
 16. 如果质量门禁因输出质量失败，修正后重新审查；如果因需求信息缺失失败，保留刷新后的失败项并生成“待确认问题”。
 17. 将主输出写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md`，使用 `templates/testcase-design-input-template.md`，供后续独立测试设计项目直接消费。
 18. 如需保留过程审查信息，将分析报告写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md`，报告中可包含方法路由、方法证据、覆盖审查、质量门禁、专家评分和 memory 更新建议。
@@ -73,10 +73,10 @@ Analysis 项目与后续 Design 项目相互独立；主交付物必须自包含
 
 | 阶段 | 必须产出 | 交给下一阶段 |
 |---|---|---|
-| `memory-context-builder` | `process/context-pack.md`、memory 澄清候选 | 需求可测性、澄清闸门 |
-| `requirement-testability` | 结构化需求模型、可测性结论、需求澄清候选 | 方法路由、澄清闸门 |
-| `testing-method-router` | 分析维度覆盖表、方法路由表、方法范围澄清候选 | 专项方法 skill、测试点生成 |
-| 专项方法 skill | `ME-*` 方法证据、测试点候选、方法缺口候选 | 测试点生成、澄清闸门 |
+| `memory-context-builder` | `process/context-pack.md`、memory 待确认候选 | 需求可测性、待确认治理 |
+| `requirement-testability` | 结构化需求模型、可测性结论、需求待确认候选 | 方法路由、待确认治理 |
+| `testing-method-router` | 分析维度覆盖表、方法路由表、方法范围待确认候选 | 专项方法 skill、测试点生成 |
+| 专项方法 skill | `ME-*` 方法证据、测试点候选、方法缺口候选 | 测试点生成、待确认治理 |
 | `testpoint-generation` | 测试用例设计输入、场景化测试点、接口测试点、待确认风险点 | 覆盖审查 |
 | `coverage-review` | 门禁结果、专家评分、阻断项和修正建议 | 设计输入和过程报告刷新 |
 
@@ -91,8 +91,8 @@ Analysis 项目与后续 Design 项目相互独立；主交付物必须自包含
 - 场景测试点必须使用 `测试点 ID | 测试点 | 大类 | 子类 | 级别 | 风险/备注`，接口测试点必须使用 `测试点 ID | 测试点 | 大类 | 子类 | 风险/备注`。
 - `大类/子类`、`场景测试类型` 和 `接口测试类型` 必须从 `knowledge/basic-test-types.md` 中选择；优先使用需求明确触发的类型，不为凑覆盖虚构专项类型。
 - 主输出不得包含 `方法`、`需求依据`、`方法路由`、`方法证据`、`质量门禁`、`专家评分` 或 `建议沉淀的记忆更新` 等过程字段。
-- “待确认信息”必须在所有交互澄清完成后刷新，只保留后续设计可执行用例时必须知道的问题；没有待确认问题时写“本次无待确认信息。”，不要保留空问题行。
-- 如保留过程分析报告，使用 `templates/final-report-template.md`，并在报告中记录 `PROJECT_ROOT`、`run-id`、运行目录、设计输入路径、分析报告路径、澄清会话路径和上下文包路径。
+- “待确认信息”必须在最终输出前刷新，只保留后续设计可执行用例时必须知道的问题；没有待确认问题时写“本次无待确认信息。”，不要保留空问题行。
+- 如保留过程分析报告，使用 `templates/final-report-template.md`，并在报告中记录 `PROJECT_ROOT`、`run-id`、运行目录、设计输入路径、分析报告路径、待确认治理记录路径和上下文包路径。
 - 默认不生成独立测试点明细；如旧流程明确需要，只能写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/legacy/testpoint-details.md`。
 
 ## 硬性约束
@@ -104,10 +104,9 @@ Analysis 项目与后续 Design 项目相互独立；主交付物必须自包含
 - 不直接覆盖历史运行产物；所有本次运行产物必须写入同一个 `${PROJECT_ROOT}/outputs/runs/<run-id>/` 目录，并使用固定文件名。
 - 不允许在 `skills/`、`.claude-plugin/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。
 - 后续阶段不得重新解析、搜索或修正 `PROJECT_ROOT`；只能使用主入口固定后的值。
-- `AskUserQuestion` 只在主会话中触发，由主入口 skill 统一治理。
-- 多个环节只登记澄清候选，不直接向用户提问。
-- `AskUserQuestion` 按优先级触发：`P0/MustAsk` 必问，`P1/ShouldAsk` 应问，`P2/P3` 默认进入待确认或忽略。
-- 复杂需求的整次分析目标是累计 5 到 10 个确认项；简单需求可以少问或不问，但必须在澄清会话产物中说明原因。
-- 用户对澄清问题的回答默认只作用于本次分析。
+- 全流程不调用用户交互能力。
+- 多个环节只登记待确认候选，不直接向用户提问，不暂停主流程。
+- `P0/P1` 问题默认进入最终 `## 6. 待确认信息`；`P2` 视影响范围进入待确认信息或风险备注；`P3` 默认只保留在过程记录。
+- 复杂需求可以保留多个待确认项，但必须去重、合并同类项，并说明影响场景或测试点。
 - 未经用户明确确认，不写入 memory 源文件。
 - 不把中间候选表或扁平测试点表直接当作最终设计输入；最终设计输入必须经过 `testpoint-generation` 场景化合并和 `coverage-review` 审查。

@@ -45,7 +45,7 @@
 - 场景测试点 `大类/子类` 和接口测试点 `大类/子类` 必须来自 `knowledge/basic-test-types.md` 的类型定义。
 - 场景测试点 `级别` 必须来自 `Level 0` 到 `Level 4`。
 - 除非明确标记为 `待确认` 或 `不适用`，否则必填字段不能为空。
-- `待确认信息` 必须是交互澄清后的未解决问题集合，不保留已回答、已覆盖、重复或空白问题。
+- `待确认信息` 必须是最终未解决问题集合，不保留已覆盖、重复、低价值或空白问题。
 - 主输出不得用“见原始需求”“按需求实现”“同上”等占位替代后续设计必须知道的信息。
 
 ## 过程分析报告
@@ -55,7 +55,7 @@
 - `## 1. 分析范围`
 - `## 2. 记忆上下文包摘要`
 - `## 3. 需求结构化摘要`
-- `## 4. 交互澄清摘要`
+- `## 4. 待确认治理摘要`
 - `## 5. 测试分析维度与方法路由`，兼容历史标题 `## 5. 测试方法路由`
 - `## 6. 方法分析证据摘要`
 - `## 7. 待确认问题`
@@ -67,12 +67,12 @@
 
 ## 运行产物路径
 
-- 每次运行必须先将当前 Claude Code 会话工作目录固定为 `PROJECT_ROOT`，再创建独立目录 `${PROJECT_ROOT}/outputs/runs/<run-id>/`。
+- 每次运行必须先将当前 agent 会话工作目录固定为 `PROJECT_ROOT`，再创建独立目录 `${PROJECT_ROOT}/outputs/runs/<run-id>/`。
 - 不得从需求文档路径向上查找或反推 `PROJECT_ROOT`。
 - 运行目录下必须按类别写入固定文件名，不得使用模型自行生成的文件名。
 - 测试用例设计输入路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md`，这是唯一默认跨项目交付件。
 - 上下文包快照路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`。
-- 澄清会话路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/clarification-session.md`，仅在发生澄清或需要记录未触发原因时生成。
+- 待确认治理记录路径必须是 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/clarification-session.md`，仅在存在待确认候选并需要记录治理结果时生成。
 - 过程分析报告路径建议是 `${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md`。
 - 兼容旧流程的测试点明细仅可写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/legacy/testpoint-details.md`，不得默认生成。
 - 默认不得生成 `<需求文件名安全短名>.test-points.md`、`<需求文件名安全短名>.testpoint-details.md` 或其他同义文件。

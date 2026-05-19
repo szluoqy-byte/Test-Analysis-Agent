@@ -36,7 +36,7 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 11. 如果过程分析报告已生成，运行 `bin/lint-testpoint-report.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 和 `bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 做过程报告校验。
 12. 使用 `knowledge/expert-review-rubric.md` 进行专家评分。
 13. 列出通过、警告和失败项。
-14. 对阻断报告发布且无法通过修正测试点解决的问题，登记 `CP-REVIEW` 澄清候选。
+14. 对阻断报告发布且无法通过修正测试点解决的问题，登记 `CP-REVIEW` 待确认候选。
 15. 给出针对性修正建议。
 
 ## 判定规则
@@ -50,7 +50,7 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 失败项分两类处理：
 
 - 输出质量失败：例如表结构不合规、测试点用例化、重复严重、场景条件缺失、类型不在 `knowledge/basic-test-types.md` 定义内，或设计方法泄漏到主输出。必须修正输出后重新审查。
-- 需求信息缺失：例如核心规则、终态、权限范围或接口契约无法确认。登记 `CP-REVIEW` 澄清候选；若未触发交互，保留为最终待确认问题。
+- 需求信息缺失：例如核心规则、终态、权限范围或接口契约无法确认。登记 `CP-REVIEW` 待确认候选，并保留为最终待确认问题。
 
 ## 输出
 
@@ -65,7 +65,7 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 - 需求依据和方法证据是否可追踪。
 - 专项分析方法是否只保留在过程报告中，主设计输入是否没有边界值清单、等价类清单、判定表、组合矩阵或状态迁移矩阵。
 - 专家评分和未达标维度。
-- 需要回传给 `clarification-gate` 的 `CP-REVIEW` 候选。
+- 需要回传给 `clarification-gate` 的 `CP-REVIEW` 待确认候选。
 
 ## 约束
 
@@ -75,5 +75,5 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 - 不通过缺少方法分析证据且没有解释的必选方法。
 - 如果专家评分低于通过线且原因是输出质量不足，必须修正后再终稿。
 - 确定性 lint 失败视为阻断性输出质量问题。
-- 本 skill 不直接触发 `AskUserQuestion`；覆盖建议默认不打断用户。
+- 本 skill 不直接向用户提问；覆盖建议默认不进入最终待确认信息，除非影响核心测试结论或报告可交付性。
 - 不把普通覆盖建议升级成阻断项，除非它会影响核心测试结论或报告可交付性。

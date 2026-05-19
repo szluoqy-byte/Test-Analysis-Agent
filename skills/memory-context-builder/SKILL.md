@@ -34,7 +34,7 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 - `memory/project-memory.md` 中的全局高优先级规则始终纳入，但不得把整份文件原样复制进 context pack。
 - `memory/domains/*.md` 中的用户扩展内容按片段引用；每个片段必须保留来源文件名和命中原因。
 - `memory/testing-experience-memory.md` 只摘取与当前需求的方法选择、风险模式、输出反馈直接相关的经验。
-- 如果相关性无法判断，宁可少量摘要并登记澄清候选，也不要全量注入。
+- 如果相关性无法判断，宁可少量摘要并登记待确认候选，也不要全量注入。
 
 ## 输出
 
@@ -47,7 +47,7 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 - 已确认的项目测试经验。
 - 输出偏好。
 - 约束和非范围。
-- memory 澄清候选问题，仅限业务域命中冲突或 memory 与当前需求明显冲突的情况。
+- memory 待确认候选问题，仅限业务域命中冲突或 memory 与当前需求明显冲突的情况。
 
 建议使用以下结构：
 
@@ -60,7 +60,7 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 | 设计约束 | 会影响测试点生成的项目约束 |
 | 历史经验 | 相关缺陷、风险模式和输出反馈 |
 | 非范围 | 本次不应套用的 memory |
-| 澄清候选 | 仅记录 memory 冲突或业务域归属冲突 |
+| 待确认候选 | 仅记录 memory 冲突或业务域归属冲突 |
 
 ## 约束
 
@@ -70,6 +70,6 @@ description: 每次需求分析开始前使用，用于从精简 memory 中选�
 - context pack 保持简洁、相关、有依据。
 - 不把 `context-pack.md` 作为“最新全局上下文”复用给后续任务；后续任务必须重新按需求筛选或显式复用当前 run。
 - 未经用户明确确认，不更新 memory 源文件。
-- 本 skill 不直接触发 `AskUserQuestion`；只向 `clarification-gate` 提供候选。
+- 本 skill 不直接向用户提问；只向 `clarification-gate` 提供候选。
 - `process/context-pack.md` 是当前 run 的运行产物，不写入 `memory/`，也不作为长期 memory 源文件。
 - 不允许在 skill 文件目录、插件缓存目录或 `.claude-plugin/` 目录下创建 `outputs/runs/`。
