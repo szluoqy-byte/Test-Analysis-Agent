@@ -7,7 +7,7 @@ description: 在需求结构化之后使用，用于根据需求片段的分析�
 
 本 skill 用来决定“该从哪些分析维度审视这段需求，以及该用什么测试方法分析”。它是防止 Agent 泛泛生成测试点的关键环节。
 
-本 skill 路由的是 AnalysisAgent 内部专项分析方法，不选择后续测试设计项目的 testcase design patterns，不建议用例数量，也不决定测试步骤或预期结果。
+本 skill 路由的是 Analysis 内部专项分析方法，不选择后续测试设计项目的 testcase design patterns，不建议用例数量，也不决定测试步骤或预期结果。
 
 ## 输入
 

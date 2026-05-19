@@ -4,7 +4,7 @@
 
 本文描述测试分析 Agent 的系统架构、运行流程、组件职责和质量闭环。该 Agent 面向 Markdown 需求文档，目标是模拟测试专家的分析过程，输出后续独立测试设计项目可直接消费的“测试用例设计输入”，而不是测试用例、测试步骤或自动化脚本。
 
-设计优先适配 Claude Code plugin / skills / subagents 体系，同时保持核心知识、方法和模板平台无关，后续可增加 OpenClaw 适配层。
+设计优先适配 Claude Code plugin / skills 体系，同时保持核心知识、方法和模板平台无关，后续可增加 OpenClaw 适配层。
 
 ## 2. 设计目标与边界
 
@@ -55,7 +55,7 @@ flowchart LR
   Quality["质量门禁与 lint"] --> Plugin
 ```
 
-系统对外只暴露一个核心能力：基于需求文档生成测试用例设计输入。稳定入口和流程真相是主 skill；agents 只作为可选协作角色，knowledge、memory、template 和 quality gate 为主流程提供支撑。
+系统对外只暴露一个核心能力：基于需求文档生成测试用例设计输入。稳定入口和流程真相是主 skill；knowledge、memory、template 和 quality gate 为主流程提供支撑。
 
 ## 5. 目录结构视图
 
@@ -63,11 +63,6 @@ flowchart LR
 test-analysis-agent/
 ├── .claude-plugin/
 │   └── plugin.json
-├── agents/
-│   ├── orchestrator.md
-│   ├── requirement-analysis-agent.md
-│   ├── testpoint-generation-agent.md
-│   └── coverage-review-agent.md
 ├── skills/
 │   ├── analyze-requirement-testpoints/
 │   ├── testing-method-router/
@@ -115,7 +110,6 @@ test-analysis-agent/
 | 目录 | 职责 |
 |---|---|
 | `.claude-plugin/` | Claude Code plugin manifest |
-| `agents/` | Claude Code subagent 角色定义，负责阶段性专家分工 |
 | `skills/` | 测试分析方法能力，负责具体分析动作 |
 | `knowledge/` | 稳定专家知识、缺陷模式、测试标准、覆盖体系 |
 | `memory/` | 经人工确认的项目上下文、领域事实和测试经验 |
@@ -129,25 +123,19 @@ test-analysis-agent/
 
 本仓库采用 Claude Code plugin 结构：
 
-- `.claude-plugin/plugin.json` 是插件 manifest，声明插件名称、版本、技能目录和 subagent 文件列表。
+- `.claude-plugin/plugin.json` 是插件 manifest，声明插件名称、版本和技能目录。
 - `skills/<skill-name>/SKILL.md` 是插件技能，启用插件后可作为命名空间 skill 使用。
-- `agents/*.md` 是插件内 subagent 定义，文件必须包含 YAML frontmatter。
-- 每个 subagent 至少声明 `name` 和 `description`，本项目额外声明 `model`、`effort`、`maxTurns` 和可用 `skills`，用于约束角色能力和运行预算。
 
 调用建议：
 
 - 面向用户的稳定入口是主 skill：`analyze-requirement-testpoints`。
-- `test-analysis-orchestrator` 是可选端到端 subagent，用于用户显式要求 agent 团队协作或 Claude Code 自动路由到 agent 的场景。
-- `requirement-analysis-agent`、`testpoint-generation-agent` 和 `coverage-review-agent` 作为阶段性 subagent，可被编排 agent 或用户显式调用。
-- 自动选择 subagent 依赖 Claude Code 对 `description` 的匹配；关键流程规范以主 skill 为准，编排 agent 只做协作映射，不维护另一套流程真相。
+- 所有阶段性能力由主入口 skill 串联各专项 skill 完成，不再内置协作代理定义。
 
 ## 6. 分层架构视图
 
 ```mermaid
 flowchart TB
   Entry["入口层\n用户命令 / skill 调用"] --> MainSkill["主入口 skill\nanalyze-requirement-testpoints"]
-  Entry -.-> AgentLayer["可选 Agent 协作层\norchestrator / analysis / generation / review"]
-  AgentLayer -.-> MainSkill
   MainSkill --> SkillLayer["Skill 方法层\n测试理论与分析动作"]
   SkillLayer --> KnowledgeLayer["Knowledge 专家知识层\n规则 / 缺陷 / 标准 / 覆盖体系"]
   SkillLayer --> MemoryLayer["Memory 记忆层\n项目事实 / 项目经验 / 输出偏好"]
@@ -160,7 +148,6 @@ flowchart TB
 ### 6.1 分层职责边界
 
 ```text
-Agent = 可选协作角色，不能维护另一套流程真相
 Skill = 主流程和分析动作，定义怎么分析、何时触发某种测试理论
 Knowledge = 使用哪些稳定测试知识、专家规则、缺陷模式和标准
 Memory = 当前项目和历史反馈中已经确认、且会影响本次分析的上下文
@@ -217,15 +204,14 @@ flowchart TD
   L --> N["输出建议沉淀的记忆更新"]
 ```
 
-## 8. 主流程与可选 Agent 协作视图
+## 8. 主流程视图
 
-以下时序以主入口 skill 为准。Agent 可以参与阶段性工作，但必须服从主 skill 的检查点、产物路径、澄清规则和质量门禁。
+以下时序以主入口 skill 为准。主 skill 负责串联各阶段 skill，并统一管理检查点、产物路径、澄清规则和质量门禁。
 
 ```mermaid
 sequenceDiagram
   participant U as 用户
   participant E as 主入口 Skill
-  participant O as 可选编排 Agent
   participant M as 记忆上下文 Skill
   participant R as 需求结构化 Skill
   participant C as 澄清闸门 Skill
@@ -237,9 +223,6 @@ sequenceDiagram
 
   U->>E: 提供 Markdown 需求文档
   E->>E: 固定当前会话工作目录为 PROJECT_ROOT / 创建 run 目录
-  opt 用户显式要求 agent 团队协作
-    E->>O: 委托阶段性协作，流程仍以主 skill 为准
-  end
   E->>M: 选择相关 memory 并生成 context-pack
   E->>C: CP-MEMORY 收集 memory 澄清候选
   E->>R: 分析需求结构和可测性
@@ -500,16 +483,7 @@ flowchart TD
 
 ## 13. 组件职责
 
-### 13.1 Agents
-
-| Agent | 职责 |
-|---|---|
-| `test-analysis-orchestrator` | 可选端到端编排代理，连接记忆、需求分析、方法路由、测试点生成和审查；流程以主入口 skill 为准 |
-| `requirement-analysis-agent` | 结构化需求，识别可测性缺口和方法触发信号 |
-| `testpoint-generation-agent` | 基于分析维度和测试方法生成设计输入 |
-| `coverage-review-agent` | 执行覆盖审查、质量门禁和专家评分 |
-
-### 13.2 Skills
+### 13.1 Skills
 
 | 类型 | Skill |
 |---|---|
@@ -522,7 +496,7 @@ flowchart TD
 | 记忆注入 | `memory-context-builder` |
 | 生成与审查 | `testpoint-generation`、`coverage-review` |
 
-### 13.3 Knowledge
+### 13.2 Knowledge
 
 | 文件 | 作用 |
 |---|---|
@@ -540,7 +514,7 @@ flowchart TD
 | `expert-review-rubric.md` | 专家评分标准 |
 | `domain-glossary.md` | 框架与分析术语 |
 
-### 13.4 Templates
+### 13.3 Templates
 
 | 文件 | 作用 |
 |---|---|
@@ -635,11 +609,10 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md
 - v1 只处理单个 Markdown 需求文档。
 - v1 memory 使用 Markdown 文件维护。
 - v1 memory 更新需要人工确认。
-- v1 优先适配 Claude Code plugin / skills / subagents。
+- v1 优先适配 Claude Code plugin / skills。
 - OpenClaw 兼容通过后续适配层实现，不重写核心架构。
 
 ## 17. 参考
 
 - [Claude Code Plugins](https://code.claude.com/docs/en/plugins)
 - [Claude Code Skills](https://code.claude.com/docs/en/skills)
-- [Claude Code Subagents](https://code.claude.com/docs/en/sub-agents)

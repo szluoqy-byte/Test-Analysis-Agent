@@ -157,6 +157,13 @@
 - 兼容旧流程的测试点明细只允许写入 `legacy/testpoint-details.md`，不再默认生成按需求名变化的 `.test-points.md` 或 `.testpoint-details.md` 文件。
 - 更新主入口 skill、编排 Agent、模板、质量门禁、memory 文档和 smoke 脚本，避免不同模型或环境生成不同文件名影响下游消费。
 
+## 第 15 轮 Skill-only 插件收敛
+
+- 删除 `agents/` 下的 Claude Code 协作代理定义，插件不再维护协作代理层。
+- 更新 `.claude-plugin/plugin.json`，只声明 `skills` 目录，避免插件加载时引用不存在的 agent 文件。
+- 更新设计文档、主入口 skill 和澄清规则，将流程真相收敛到 `analyze-requirement-testpoints` 主入口 skill。
+- 保留历史评审记录中的 Agent 演进说明，作为架构收敛过程的追溯信息。
+
 ## 当前验收标准
 
 - 最终报告包含测试方法路由表。

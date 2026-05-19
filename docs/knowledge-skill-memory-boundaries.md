@@ -23,7 +23,7 @@ Memory = 经确认的项目上下文和项目历史经验
 | Level 0 到 Level 4 的判定规则 | `knowledge/risk-level-rules.md` | 级别标准应全局一致 |
 | 方法分析证据字段和质量要求 | `knowledge/method-evidence-standard.md` | 证明测试理论被实际应用的统一标准 |
 | 某个测试方法的执行步骤 | `skills/*/SKILL.md` | 过程性动作，不是事实库 |
-| 输入、输出、约束、质量门禁调用顺序 | `skills/*/SKILL.md` | Agent 运行流程 |
+| 输入、输出、约束、质量门禁调用顺序 | `skills/*/SKILL.md` | 插件运行流程 |
 | 项目全局事实、全局约束、输出偏好和项目专属术语覆盖 | `memory/project-memory.md` | 项目专属且经确认 |
 | 不同业务域的业务术语、角色权限、接口约定、数据约定和设计约束 | `memory/domains/*.md` | 用户自定义扩展区，自动扫描并按需匹配 |
 | 项目真实历史缺陷、复盘教训、团队测试习惯 | `memory/testing-experience-memory.md` | 项目专属经验 |

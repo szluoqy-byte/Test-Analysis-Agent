@@ -104,7 +104,7 @@ Analysis 项目与后续 Design 项目相互独立；主交付物必须自包含
 - 不直接覆盖历史运行产物；所有本次运行产物必须写入同一个 `${PROJECT_ROOT}/outputs/runs/<run-id>/` 目录，并使用固定文件名。
 - 不允许在 `skills/`、`.claude-plugin/`、插件缓存目录或 skill 工作目录下创建 `outputs/runs/`。
 - 后续阶段不得重新解析、搜索或修正 `PROJECT_ROOT`；只能使用主入口固定后的值。
-- `AskUserQuestion` 只在主会话中触发，不交给 subagent 内部触发。
+- `AskUserQuestion` 只在主会话中触发，由主入口 skill 统一治理。
 - 多个环节只登记澄清候选，不直接向用户提问。
 - `AskUserQuestion` 按优先级触发：`P0/MustAsk` 必问，`P1/ShouldAsk` 应问，`P2/P3` 默认进入待确认或忽略。
 - 复杂需求的整次分析目标是累计 5 到 10 个确认项；简单需求可以少问或不问，但必须在澄清会话产物中说明原因。
