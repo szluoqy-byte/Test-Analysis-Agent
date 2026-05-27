@@ -1,6 +1,6 @@
-# User Knowledge 目录说明
+# Personal Knowledge 目录说明
 
-本目录保存当前使用者的本地测试知识补充。它属于 `user` 层，默认不提交 Git，只影响本地运行。
+本目录保存当前使用者的本地测试知识补充。它在架构语义上属于 `personal` 层，当前路径继续兼容历史 `user` 目录，默认不提交 Git，只影响本地运行。
 
 ## 适合放入的内容
 
@@ -14,4 +14,4 @@
 - 测试点字段、类型、方法、级别、输出结构和质量门禁覆盖规则。
 - 会削弱 core 或 project 层约束的规则。
 
-`memory-context-builder` 会在运行时按需扫描本目录，但只会把与当前需求直接相关的片段写入 context pack。
+`memory-context-builder` 会在运行时按需扫描本目录，并在 context pack 中记录 personal 绑定、命中来源、未采用来源和补读建议，但只会把与当前需求直接相关的片段写入 context pack。

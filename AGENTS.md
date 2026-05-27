@@ -22,9 +22,11 @@
 - 不要基于 skill 目录、`.claude-plugin/`、`.opencode/` 或输入文件目录解析路径。
 - 运行产物写入 `outputs/runs/<run-id>/`。
 - 支持可选 `project-key`：确定后可扫描 `*/projects/<project-key>/**/*.md`；未唯一确定时不得读取所有项目目录正文。
+- `project` 和 `personal` 是当前 run 的一等输入源：必须在 `process/context-pack.md` 中记录绑定结果、命中来源、未采用来源和补读建议。
 - `knowledge/projects/<project-key>/` 和 `knowledge/user/` 只能作为测试知识补充，不得覆盖根目录 `knowledge/` 的核心标准、字段、类型、级别和质量门禁。
-- 配置分为 `core / project / user` 三层：core 是仓库根目录稳定文件，project 位于 `*/projects/<project-key>/`，user 位于 `*/user/`。project 和 user 默认不提交 Git，只保留 README。
-- user 层只能补充个人偏好和本地检查关注点，不得覆盖需求文档、project memory、核心输出契约或质量门禁。
+- 配置分为 `core / project / personal` 三层：core 是仓库根目录稳定文件，project 位于 `*/projects/<project-key>/`，personal 当前兼容路径位于 `*/user/`。project 和 personal 默认不提交 Git，只保留 README。
+- personal 层只能补充个人偏好和本地检查关注点，不得作为项目事实或团队共识，也不得覆盖需求文档、project memory、核心输出契约或质量门禁。
+- 创建 run 目录后必须维护 `process/task-list.md`；它是阶段顺序和状态的流程事实源，不依赖运行时内置 todo。
 
 ## 测试分析流程
 

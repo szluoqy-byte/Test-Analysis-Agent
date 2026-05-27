@@ -2,7 +2,7 @@
 
 本目录按 `project-key` 保存项目级测试知识补充。它用于让分析过程理解某个项目特有的测试策略，而不是保存业务事实本身。
 
-本目录属于 `project` 层，默认不提交 Git；`.gitignore` 只保留本 README。团队如果确实希望共享某个项目配置，可以显式强制添加对应文件。
+本目录属于 `project` 层，默认不提交 Git；`.gitignore` 只保留本 README。团队如果确实希望共享某个项目配置，可以显式强制添加对应文件。project 层是当前 run 的一等输入源，命中和未采用情况必须记录到 `outputs/runs/<run-id>/process/context-pack.md`。
 
 ## 建议结构
 

@@ -147,9 +147,10 @@
 
 - 主输出路径固定为：`${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md`。
 - 如保留过程分析报告，路径固定为 `${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md`。
-- 运行上下文和澄清记录分别写入 `process/context-pack.md` 和 `process/clarification-session.md`。
+- 运行任务清单、上下文和澄清记录分别写入 `process/task-list.md`、`process/context-pack.md` 和 `process/clarification-session.md`。
 - 设计输入文件必须优先满足后续独立测试设计项目，不包含方法路由、方法证据、质量门禁、专家评分或 memory 更新建议。
 - 设计输入文件必须自包含，不得用“见原始需求”“同上”“按需求实现”等占位替代后续设计必须知道的信息。
+- 如果 `context-pack.md` 使用了 project/personal 补充，后续设计必须知道的项目风险、覆盖策略、术语映射、个人关注点或判定依据必须上收到主输出；不得要求后续设计项目回读 project/personal 本地文件。
 - 设计输入中的测试点 ID 在场景测试点中使用 `TP-001` 连续递增，接口测试点使用 `ITP-001` 连续递增。
 - 场景测试点表使用 `测试点 ID | 测试点 | 大类 | 子类 | 级别 | 风险/备注`；接口测试点表使用 `测试点 ID | 测试点 | 大类 | 子类 | 风险/备注`。
 - 不要把内部分析方法写入设计输入。

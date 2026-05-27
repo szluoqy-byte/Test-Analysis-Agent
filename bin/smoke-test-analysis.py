@@ -40,6 +40,7 @@ REQUIRED_FILES = [
     "templates/testpoint-output-template.md",
     "templates/testcase-design-input-template.md",
     "templates/context-pack-template.md",
+    "templates/task-list-template.md",
     "templates/clarification-template.md",
     "templates/projects/README.md",
     "templates/user/README.md",

@@ -11,6 +11,7 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 
 - 已生成的测试用例设计输入。
 - 如有过程报告，读取其中的测试点映射、方法路由和方法证据。
+- `${PROJECT_ROOT}/outputs/runs/<run-id>/process/task-list.md`。
 - `knowledge/test-analysis-methodology.md`。
 - `knowledge/test-scenario-point-case-boundary.md`。
 - `knowledge/basic-test-types.md`。
@@ -18,7 +19,7 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 - 方法分析证据摘要。
 - 结构化需求模型。
 - 待确认问题。
-- 记忆上下文包中的 project/user 补充和命中来源。
+- 记忆上下文包中的 project/personal 补充、绑定结果和命中来源。
 - `quality-gates/*.md`。
 - `knowledge/expert-review-rubric.md`。
 
@@ -32,14 +33,16 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 6. 执行 `output-schema-check.md`。
 7. 执行 `testcase-design-input-check.md`，重点检查场景/条件/测试点/用例边界、测试类型合法性，以及设计方法是否泄漏到主输出。
 8. 执行 `semantic-quality-check.md`。
-9. 如果测试用例设计输入文件已生成，运行 `bin/lint-testcase-design-input.py ${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md` 做确定性结构校验。
-10. 运行 `bin/check-artifact-consistency.py ${PROJECT_ROOT}/outputs/runs/<run-id>`，检查固定运行目录和主交付件、过程报告、兼容明细之间的 `TP-*`/`ITP-*` 一致性。
-11. 如果过程分析报告已生成，运行 `bin/lint-testpoint-report.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 和 `bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 做过程报告校验。
-12. 如果使用了 project/user 补充，检查相关风险原因、覆盖策略、判定依据、模板偏好或附加门禁是否已正确处理，且没有覆盖核心类型、字段、级别、输出契约和质量门禁。
-13. 使用 `knowledge/expert-review-rubric.md` 进行专家评分。
-14. 列出通过、警告和失败项。
-15. 对阻断报告发布且无法通过修正测试点解决的问题，登记 `CP-REVIEW` 待确认候选。
-16. 给出针对性修正建议。
+9. 检查 `process/task-list.md` 是否包含固定阶段、顺序正确、最终必选阶段已完成。
+10. 如果测试用例设计输入文件已生成，运行 `bin/lint-testcase-design-input.py ${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md` 做确定性结构校验。
+11. 运行 `bin/check-artifact-consistency.py ${PROJECT_ROOT}/outputs/runs/<run-id>`，检查固定运行目录、任务清单、主交付件、过程报告、兼容明细之间的一致性。
+12. 如果过程分析报告已生成，运行 `bin/lint-testpoint-report.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 和 `bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 做过程报告校验。
+13. 如果使用了 project/personal 补充，检查相关风险原因、覆盖策略、判定依据、个人偏好、模板偏好或附加门禁是否已正确处理，且没有覆盖核心类型、字段、级别、输出契约和质量门禁。
+14. 检查 project/personal 使用情况是否在 context pack 和过程报告中可见，包括绑定结果、命中来源、未采用来源、冲突处理和后续补读建议；personal 内容不得被写成项目事实或团队共识。
+15. 使用 `knowledge/expert-review-rubric.md` 进行专家评分。
+16. 列出通过、警告和失败项。
+17. 对阻断报告发布且无法通过修正测试点解决的问题，登记 `CP-REVIEW` 待确认候选。
+18. 给出针对性修正建议。
 
 ## 判定规则
 
@@ -61,6 +64,7 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 审查输出必须包含：
 
 - 每个 quality gate 的结果和失败/警告项。
+- task-list 中固定阶段的状态和异常项。
 - 必选方法是否都有测试点或待确认问题承接。
 - 适用分析维度是否都落到主交付件，且没有只停留在过程报告中。
 - 测试点是否保持非用例化。
@@ -79,4 +83,4 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 - 确定性 lint 失败视为阻断性输出质量问题。
 - 本 skill 不直接向用户提问；覆盖建议默认不进入最终待确认信息，除非影响核心测试结论或报告可交付性。
 - 不把普通覆盖建议升级成阻断项，除非它会影响核心测试结论或报告可交付性。
-- 如果需要核对 project/user 附加门禁或模板偏好，只能按 context pack 记录的来源或当前需求明确指向的文件补读相关章节，并在审查输出中记录来源；不得全目录搜索或全量复制大文件。
+- 如果需要核对 project/personal 附加门禁或模板偏好，只能按 context pack 记录的来源或当前需求明确指向的文件补读相关章节，并在审查输出中记录来源；不得全目录搜索或全量复制大文件。

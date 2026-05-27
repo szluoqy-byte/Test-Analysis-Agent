@@ -19,7 +19,7 @@ Analysis 与后续 Design 是独立项目。设计输入文件是唯一交接物
 - `ME-*` 方法分析证据摘要。
 - 风险分析结果。
 - 边界/等价类、状态、决策表、场景流、权限、接口、数据一致性、组合兼容等分析结果。
-- 记忆上下文包中命中的 project/user 风险画像、覆盖策略、术语映射、模板偏好和 oracle 补充。
+- 记忆上下文包中命中的 project/personal 风险画像、覆盖策略、术语映射、模板偏好、个人关注点和 oracle 补充。
 - `knowledge/testpoint-standard.md`。
 - `knowledge/test-analysis-methodology.md`。
 - `knowledge/test-scenario-point-case-boundary.md`。
@@ -42,7 +42,7 @@ Analysis 与后续 Design 是独立项目。设计输入文件是唯一交接物
 10. 对每个 `必选` 方法检查是否已落到场景测试点、接口测试点、方法证据或待确认问题。
 11. 刷新待确认信息，移除已被需求依据、上下文包、场景条件、接口补充说明或测试点风险备注覆盖的问题。
 12. 检查主输出自包含性：如果某条测试点需要依赖原始需求、过程报告或 memory 才能理解，应把必要背景上收进场景测试条件、接口补充说明、风险备注或待确认信息。
-13. 如果使用了 project/user 补充，必须把后续设计需要知道的业务上下文、风险原因或判定依据写入主设计输入；不得要求后续项目回读 `*/projects/<project-key>/` 或 `*/user/`。
+13. 如果使用了 project/personal 补充，必须把后续设计需要知道的业务上下文、风险原因、个人关注点或判定依据写入主设计输入；不得要求后续项目回读 `*/projects/<project-key>/` 或 `*/user/`。
 14. 填写 `输入完整性自检`，逐项说明是否满足，不保留空说明。
 
 ## 标准来源
@@ -52,7 +52,7 @@ Analysis 与后续 Design 是独立项目。设计输入文件是唯一交接物
 - 场景、场景测试条件、测试点和测试用例的层级边界以 `knowledge/test-scenario-point-case-boundary.md` 为准。
 - 设计输入文件中的 `场景测试类型`、测试点 `大类/子类` 和接口测试类型以 `knowledge/basic-test-types.md` 为准。
 - 判定依据启发以 `knowledge/test-oracle-heuristics.md` 为准。
-- project/user 补充以当前 run 的 `process/context-pack.md` 为准，只能补充风险画像、覆盖策略、术语映射、模板偏好和 oracle，不改变上述核心标准来源。
+- project/personal 补充以当前 run 的 `process/context-pack.md` 为准，只能补充风险画像、覆盖策略、术语映射、模板偏好、个人关注点和 oracle，不改变上述核心标准来源；personal 不得作为项目事实。
 
 ## 合并规则
 
@@ -100,4 +100,4 @@ Analysis 与后续 Design 是独立项目。设计输入文件是唯一交接物
 - 本阶段不触发交互；如发现缺口，写入待确认问题或风险确认点。
 - 不为了凑数量拆出只有输入值、按钮或页面元素不同的测试点。
 - 不使用 `正常`、`异常`、`校验通过` 这类无法单独表达验证特性的描述作为测试点主体。
-- 如果 context pack 中的 project/user 补充不足，只能按 context pack 记录的来源或当前需求明确指向的文件补读相关章节，并在过程报告或风险备注中记录来源；不得全目录搜索或全量复制大文件。
+- 如果 context pack 中的 project/personal 补充不足，只能按 context pack 记录的来源或当前需求明确指向的文件补读相关章节，并在过程报告或风险备注中记录来源；不得全目录搜索或全量复制大文件。

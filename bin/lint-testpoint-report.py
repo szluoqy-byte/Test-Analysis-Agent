@@ -24,6 +24,24 @@ REQUIRED_SECTIONS = [
     "## 12. 建议沉淀的记忆更新",
 ]
 
+MODERN_REQUIRED_SECTIONS = [
+    "# ",
+    "## 1. 分析范围",
+    "## 2. 任务清单摘要",
+    "## 3. 记忆上下文包摘要",
+    "## 4. Project/Personal 上下文使用情况",
+    "## 5. 需求结构化摘要",
+    "## 6. 待确认治理摘要",
+    "## 7. 测试分析维度与方法路由",
+    "## 8. 方法分析证据摘要",
+    "## 9. 待确认问题",
+    "## 10. 测试点明细",
+    "## 11. 覆盖审查结果",
+    "## 12. 质量门禁结果",
+    "## 13. 专家评审评分",
+    "## 14. 建议沉淀的记忆更新",
+]
+
 LEGACY_REQUIRED_SECTIONS = [
     "# ",
     "## 1. 分析范围",
@@ -147,7 +165,9 @@ def main() -> int:
     is_full_report = "## 1. 分析范围" in text
     required_sections = DETAIL_REQUIRED_SECTIONS
     if is_full_report:
-        if "## 4. 交互澄清摘要" in text or "## 4. 待确认治理摘要" in text:
+        if "## 4. Project/Personal 上下文使用情况" in text:
+            required_sections = MODERN_REQUIRED_SECTIONS
+        elif "## 4. 交互澄清摘要" in text or "## 4. 待确认治理摘要" in text:
             required_sections = REQUIRED_SECTIONS
         else:
             required_sections = LEGACY_REQUIRED_SECTIONS
