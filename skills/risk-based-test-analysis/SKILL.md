@@ -17,6 +17,7 @@ description: 当需要按产品、业务、数据、权限、集成、运维和�
 
 - 结构化需求模型。
 - 记忆上下文包。
+- 记忆上下文包中命中的 project/user 风险画像和 oracle 补充。
 - `knowledge/expert-rules.md`。
 - `knowledge/defect-patterns.md`。
 - `knowledge/testpoint-standard.md`。
@@ -27,6 +28,7 @@ description: 当需要按产品、业务、数据、权限、集成、运维和�
 - 使用 `knowledge/expert-rules.md` 判断风险覆盖方向。
 - 使用 `knowledge/defect-patterns.md` 匹配通用缺陷模式。
 - 使用 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md` 中的项目历史缺陷和项目风险模式修正关注点。
+- 使用 context pack 中的 project/user knowledge 补充识别项目级风险画像、个人关注点、覆盖策略和判定依据启发；补充不得写成已确认业务事实。
 - 使用 `knowledge/risk-level-rules.md` 判断建议级别，级别定义仍以 `knowledge/testpoint-standard.md` 为准。
 
 风险识别必须区分三类来源：
@@ -65,3 +67,4 @@ description: 当需要按产品、业务、数据、权限、集成、运维和�
 - 不直接向用户提问。
 - 不把风险等级当作测试点数量的唯一依据；高风险需要更强证据或更明确覆盖对象。
 - 最终设计输入中只保留可追踪到需求、memory 或风险确认点的风险备注；不把通用风险推断写成已确认业务规则。
+- 如果 context pack 中的 project/user 风险画像不足，只能按 context pack 记录的来源或当前需求明确指向的文件补读相关章节，并在方法证据中记录来源；不得全目录搜索或全量复制大文件。

@@ -21,6 +21,10 @@
 - 所有 `skills/...`、`knowledge/...`、`templates/...`、`quality-gates/...`、`memory/...`、`bin/...` 和 `outputs/...` 路径都从仓库根目录解析。
 - 不要基于 skill 目录、`.claude-plugin/`、`.opencode/` 或输入文件目录解析路径。
 - 运行产物写入 `outputs/runs/<run-id>/`。
+- 支持可选 `project-key`：确定后可扫描 `*/projects/<project-key>/**/*.md`；未唯一确定时不得读取所有项目目录正文。
+- `knowledge/projects/<project-key>/` 和 `knowledge/user/` 只能作为测试知识补充，不得覆盖根目录 `knowledge/` 的核心标准、字段、类型、级别和质量门禁。
+- 配置分为 `core / project / user` 三层：core 是仓库根目录稳定文件，project 位于 `*/projects/<project-key>/`，user 位于 `*/user/`。project 和 user 默认不提交 Git，只保留 README。
+- user 层只能补充个人偏好和本地检查关注点，不得覆盖需求文档、project memory、核心输出契约或质量门禁。
 
 ## 测试分析流程
 

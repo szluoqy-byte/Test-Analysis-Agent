@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+PROJECT_KEY_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 MAIN_SKILL = "analyze-requirement-testpoints"
 OPENCODE_COMMAND = ".opencode/commands/analyze-requirement-testpoints.md"
 
@@ -124,6 +125,69 @@ def validate_sync(root: Path, issues: list[str]) -> None:
         fail(f"OpenCode skill mirror is out of sync: {detail}", issues)
 
 
+def validate_markdown_files(root: Path, files: list[Path], issues: list[str]) -> None:
+    for markdown_file in files:
+        try:
+            text = markdown_file.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            fail(f"{markdown_file.relative_to(root)} is not valid UTF-8: {exc}", issues)
+            continue
+        if not text.strip():
+            fail(f"{markdown_file.relative_to(root)} must not be empty", issues)
+
+
+def validate_project_extension_dirs(root: Path, issues: list[str]) -> None:
+    for relative in (
+        "memory/projects",
+        "knowledge/projects",
+        "templates/projects",
+        "quality-gates/projects",
+    ):
+        projects_dir = root / relative
+        if not projects_dir.exists():
+            continue
+        if not projects_dir.is_dir():
+            fail(f"{relative} must be a directory", issues)
+            continue
+
+        for project_dir in sorted(path for path in projects_dir.iterdir() if path.is_dir()):
+            if not PROJECT_KEY_RE.fullmatch(project_dir.name):
+                fail(
+                    f"{project_dir.relative_to(root)} has invalid project-key; "
+                    "use lowercase letters, digits, '-' or '_'",
+                    issues,
+                )
+                continue
+
+            markdown_files = sorted(
+                path
+                for path in project_dir.rglob("*.md")
+                if path.is_file() and path.name != "README.md"
+            )
+            if not markdown_files:
+                fail(f"{project_dir.relative_to(root)} should contain at least one project Markdown file", issues)
+                continue
+
+            validate_markdown_files(root, markdown_files, issues)
+
+
+def validate_user_extension_dirs(root: Path, issues: list[str]) -> None:
+    for relative in ("memory/user", "knowledge/user", "templates/user", "quality-gates/user"):
+        user_dir = root / relative
+        if not user_dir.exists():
+            continue
+        if not user_dir.is_dir():
+            fail(f"{relative} must be a directory", issues)
+            continue
+
+        markdown_files = sorted(
+            path
+            for path in user_dir.rglob("*.md")
+            if path.is_file() and path.name != "README.md"
+        )
+        validate_markdown_files(root, markdown_files, issues)
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     issues: list[str] = []
@@ -132,6 +196,8 @@ def main() -> int:
     validate_skills(root, issues)
     validate_opencode(root, issues)
     validate_sync(root, issues)
+    validate_project_extension_dirs(root, issues)
+    validate_user_extension_dirs(root, issues)
 
     if issues:
         print("Runtime validation failed:")

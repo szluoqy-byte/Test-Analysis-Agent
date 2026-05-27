@@ -11,6 +11,7 @@ description: 当需要分析 Markdown 需求文档的可测试性时使用。负
 
 - 原始 Markdown 需求文档。
 - 记忆上下文包。
+- 记忆上下文包中命中的 project/user knowledge 补充。
 - `knowledge/domain-glossary.md`。
 - `knowledge/test-analysis-methodology.md`。
 
@@ -22,8 +23,9 @@ description: 当需要分析 Markdown 需求文档的可测试性时使用。负
 4. 把模糊、缺失、冲突和不可验证表达转成“待确认问题”。
 5. 保留需求依据，引用标题、表格行或段落摘要。
 6. 按 `knowledge/test-analysis-methodology.md` 标记测试分析维度，例如需求可测性、风险、业务场景、数据域、规则组合、状态、权限、接口、数据一致性、组合兼容、非功能质量属性和经验缺陷模式。
-7. 提取测试方法触发信号，例如范围、状态、多条件规则、权限、接口、数据变化、兼容配置。
-8. 将会影响测试点正确性的问题登记为待确认候选，交给 `clarification-gate` 排序和收口。
+7. 结合 context pack 中的 project/user knowledge 补充识别项目特有风险、个人关注点、覆盖策略或术语映射，但不得覆盖需求文档中的明确规则。
+8. 提取测试方法触发信号，例如范围、状态、多条件规则、权限、接口、数据变化、兼容配置。
+9. 将会影响测试点正确性的问题登记为待确认候选，交给 `clarification-gate` 排序和收口。
 
 ## 可测性判断
 
@@ -58,3 +60,4 @@ description: 当需要分析 Markdown 需求文档的可测试性时使用。负
 - 无法确认时，生成简洁的待确认问题。
 - 不直接向用户提问。
 - 不把通用测试理论写进需求模型；只记录当前需求的事实、缺口和触发信号。
+- 如果 context pack 中的 project/user 信息不足，只能按 context pack 记录的来源或当前需求明确指向的文件补读相关章节，并在需求模型或待确认候选中记录来源；不得全目录搜索或全量复制大文件。

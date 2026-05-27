@@ -18,6 +18,7 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 - 方法分析证据摘要。
 - 结构化需求模型。
 - 待确认问题。
+- 记忆上下文包中的 project/user 补充和命中来源。
 - `quality-gates/*.md`。
 - `knowledge/expert-review-rubric.md`。
 
@@ -34,10 +35,11 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 9. 如果测试用例设计输入文件已生成，运行 `bin/lint-testcase-design-input.py ${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md` 做确定性结构校验。
 10. 运行 `bin/check-artifact-consistency.py ${PROJECT_ROOT}/outputs/runs/<run-id>`，检查固定运行目录和主交付件、过程报告、兼容明细之间的 `TP-*`/`ITP-*` 一致性。
 11. 如果过程分析报告已生成，运行 `bin/lint-testpoint-report.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 和 `bin/semantic-testpoint-check.py ${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md` 做过程报告校验。
-12. 使用 `knowledge/expert-review-rubric.md` 进行专家评分。
-13. 列出通过、警告和失败项。
-14. 对阻断报告发布且无法通过修正测试点解决的问题，登记 `CP-REVIEW` 待确认候选。
-15. 给出针对性修正建议。
+12. 如果使用了 project/user 补充，检查相关风险原因、覆盖策略、判定依据、模板偏好或附加门禁是否已正确处理，且没有覆盖核心类型、字段、级别、输出契约和质量门禁。
+13. 使用 `knowledge/expert-review-rubric.md` 进行专家评分。
+14. 列出通过、警告和失败项。
+15. 对阻断报告发布且无法通过修正测试点解决的问题，登记 `CP-REVIEW` 待确认候选。
+16. 给出针对性修正建议。
 
 ## 判定规则
 
@@ -77,3 +79,4 @@ description: 在测试用例设计输入生成后使用，用于执行覆盖审�
 - 确定性 lint 失败视为阻断性输出质量问题。
 - 本 skill 不直接向用户提问；覆盖建议默认不进入最终待确认信息，除非影响核心测试结论或报告可交付性。
 - 不把普通覆盖建议升级成阻断项，除非它会影响核心测试结论或报告可交付性。
+- 如果需要核对 project/user 附加门禁或模板偏好，只能按 context pack 记录的来源或当前需求明确指向的文件补读相关章节，并在审查输出中记录来源；不得全目录搜索或全量复制大文件。

@@ -7,6 +7,7 @@
 - 新增业务域时，直接在本目录创建一个 `.md` 分片即可，不需要修改 `memory/project-memory.md`。
 - `memory-context-builder` 会自动扫描本目录下的 `.md` 文件，跳过 `README.md`，再根据当前需求的模块、角色、业务对象、状态、接口和关键词选择相关分片。
 - 分片内容不会默认全量注入；只有与本次需求相关的片段会进入当前运行目录的 `process/context-pack.md`。
+- 如果分片只适用于某一个项目，优先放入 `memory/projects/<project-key>/domains/`，避免全局业务域分片污染其他项目。
 
 ## 分片建议结构
 

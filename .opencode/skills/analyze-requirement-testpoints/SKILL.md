@@ -39,11 +39,52 @@ Analysis 项目与后续 Design 项目相互独立；主交付物必须自包含
 
 `run-id` 只在一次新的完整分析开始时生成一次。同一轮分析内的后续修正、待确认问题刷新、质量门禁重跑和报告刷新，必须复用已经创建的运行目录。如果用户明确要求“继续上次结果修改”或提供了已有运行目录，优先复用该目录；只有用户要求重新分析或无法确认已有运行目录属于当前需求时，才创建新的 `run-id`。
 
+## 项目化上下文发现
+
+本流程按 `core / project / user` 三层读取配置。core 层是随 Agent 包发布的根目录文件；project 层是 `*/projects/<project-key>/**/*.md`；user 层是 `*/user/**/*.md`。project 和 user 层默认不提交 Git，只作为本地 overlay。
+
+本流程支持可选 `project-key`，用于发现项目化 memory、knowledge、templates 和 quality gates。`project-key` 不改变 `PROJECT_ROOT`，也不能从需求文件路径反推项目根目录。
+
+`project-key` 按以下顺序确定：
+
+1. 用户在命令参数或当前请求中显式提供 `--project <project-key>`、`project=<project-key>` 或“项目：<project-key>”。
+2. 需求 Markdown frontmatter 中存在 `project` 或 `project_key`。
+3. `memory/projects/` 或 `knowledge/projects/` 下存在唯一目录名，且该目录名、目录 README、项目标题或关键词与需求标题、模块或正文显式匹配。
+
+项目化文件发现范围：
+
+- `memory/projects/<project-key>/project-memory.md`
+- `memory/projects/<project-key>/testing-experience-memory.md`
+- `memory/projects/<project-key>/domains/**/*.md`
+- `memory/projects/<project-key>/**/*.md`
+- `knowledge/projects/<project-key>/**/*.md`
+- `templates/projects/<project-key>/**/*.md`
+- `quality-gates/projects/<project-key>/**/*.md`
+- `memory/user/**/*.md`
+- `knowledge/user/**/*.md`
+- `templates/user/**/*.md`
+- `quality-gates/user/**/*.md`
+
+如果无法唯一确定 `project-key`，不得全量读取所有项目目录正文；继续使用 core 层和 user 层，并把项目归属问题登记到最终“待确认信息”。project/user 层只能补充项目风险画像、覆盖策略、术语映射、路由说明、测试 oracle、模板说明或附加门禁，不得覆盖 core 层中的核心标准、字段、类型、级别、输出契约和质量门禁。user 层也不得覆盖需求文档或 project memory。
+
+## 渐进式披露与按源补读
+
+本流程必须遵循渐进式披露：先由 `memory-context-builder` 读取目录、README、frontmatter、文件名和标题结构，生成最小 `context-pack.md`；后续阶段默认消费当前 run 的 context pack 和 core 标准。
+
+当专项 skill 发现 context pack 缺少完成当前分析所需的 project/user 信息时，可以按源补读，但必须受控：
+
+- 优先读取 context pack 已列出的来源文件、章节、关键词或“后续补读建议”。
+- 如果当前需求明确指向某个 project/user 文件，也可以读取该对应文件。
+- 不得自行全目录搜索 project/user，也不得把大文件整份复制进过程产物。
+- 读取结果直接进入当前 skill 的方法证据、风险备注或过程报告，不要求刷新 `context-pack.md`。
+
+超过 50KB 的 project/user Markdown 不要求提供 `index.md`。读取大文件时先看文件名、frontmatter、标题结构或目录，再按命中的标题、关键词或表格片段读取必要内容；如果仍无法定位，转为待确认候选或风险备注。
+
 ## 执行流程
 
 1. 校验输入必须是单个 Markdown 文件。
 2. 将当前 agent 会话工作目录固定为 `PROJECT_ROOT`，生成本次运行 ID：`<YYYYMMDD-HHMMSS>-<需求文件名安全短名>-<短哈希>`，并创建 `${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/`、`process/`、`reports/` 和按需 `legacy/`。
-3. 使用 `memory-context-builder` 生成本次运行的 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`，并登记可能的 memory 待确认候选。
+3. 解析可选 `project-key`，使用 `memory-context-builder` 扫描 core、project 和 user 三层配置，生成本次运行的 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`，并登记可能的 memory 或项目归属待确认候选。
 4. 在 `CP-MEMORY` 检查点使用 `clarification-gate`；memory 冲突影响需求理解时登记为待确认候选，不中途提问。
 5. 使用 `requirement-testability` 生成结构化需求模型，并按 `knowledge/test-analysis-methodology.md` 标记需求片段涉及的测试分析维度，登记业务规则、状态、权限、边界和接口契约待确认候选。
 6. 在 `CP-REQUIREMENT` 检查点必须使用 `clarification-gate`；这是主要待确认收集点，必须形成候选队列、去重排序结果和最终保留原因。即使存在 `P0/P1` 问题，也不得中途打断用户。
@@ -60,14 +101,15 @@ Analysis 项目与后续 Design 项目相互独立；主交付物必须自包含
    - `data-consistency-analysis`
    - `combinatorial-compatibility-analysis`
 10. 汇总专项 skill 产出的 `ME-*` 方法分析证据，并登记专项方法缺口待确认候选。
-11. 在 `CP-METHOD` 检查点使用 `clarification-gate`；会导致决策表、状态图、权限矩阵或接口契约失真的缺口必须进入最终待确认候选。
-12. 使用 `testpoint-generation` 基于方法证据生成场景化测试用例设计输入：先识别测试场景，再补齐场景测试条件、场景测试点、接口测试清单和接口测试点；原则上不在本阶段打断用户，缺口写为待确认风险点。
-13. 使用 `coverage-review` 执行覆盖审查、质量门禁和专家评分，并登记阻断报告发布的待确认候选。
-14. 在 `CP-REVIEW` 检查点使用 `clarification-gate`；对仍会影响交付可用性的缺口做最终收口，不提问、不暂停。
-15. 根据待确认候选、结构化需求模型、方法证据和覆盖审查结果，刷新最终“待确认问题”：移除已覆盖和重复的问题，只保留后续用例设计必须知道的未解决问题。
-16. 如果质量门禁因输出质量失败，修正后重新审查；如果因需求信息缺失失败，保留刷新后的失败项并生成“待确认问题”。
-17. 将主输出写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md`，使用 `templates/testcase-design-input-template.md`，供后续独立测试设计项目直接消费。
-18. 如需保留过程审查信息，将分析报告写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md`，报告中可包含方法路由、方法证据、覆盖审查、质量门禁、专家评分和 memory 更新建议。
+11. 如果任一阶段发现 context pack 不足，可按上述受控规则补读对应来源文件；补读仍不足时转为待确认候选或风险备注。
+12. 在 `CP-METHOD` 检查点使用 `clarification-gate`；会导致决策表、状态图、权限矩阵或接口契约失真的缺口必须进入最终待确认候选。
+13. 使用 `testpoint-generation` 基于方法证据生成场景化测试用例设计输入：先识别测试场景，再补齐场景测试条件、场景测试点、接口测试清单和接口测试点；原则上不在本阶段打断用户，缺口写为待确认风险点。
+14. 使用 `coverage-review` 执行覆盖审查、质量门禁和专家评分，并登记阻断报告发布的待确认候选。
+15. 在 `CP-REVIEW` 检查点使用 `clarification-gate`；对仍会影响交付可用性的缺口做最终收口，不提问、不暂停。
+16. 根据待确认候选、结构化需求模型、方法证据和覆盖审查结果，刷新最终“待确认问题”：移除已覆盖和重复的问题，只保留后续用例设计必须知道的未解决问题。
+17. 如果质量门禁因输出质量失败，修正后重新审查；如果因需求信息缺失失败，保留刷新后的失败项并生成“待确认问题”。
+18. 将主输出写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/deliverables/testcase-design-input.md`，使用 `templates/testcase-design-input-template.md`，供后续独立测试设计项目直接消费。
+19. 如需保留过程审查信息，将分析报告写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/reports/test-analysis-report.md`，报告中可包含方法路由、方法证据、覆盖审查、质量门禁、专家评分和 memory 更新建议。
 
 ## 阶段产物契约
 
@@ -76,7 +118,7 @@ Analysis 项目与后续 Design 项目相互独立；主交付物必须自包含
 | `memory-context-builder` | `process/context-pack.md`、memory 待确认候选 | 需求可测性、待确认治理 |
 | `requirement-testability` | 结构化需求模型、可测性结论、需求待确认候选 | 方法路由、待确认治理 |
 | `testing-method-router` | 分析维度覆盖表、方法路由表、方法范围待确认候选 | 专项方法 skill、测试点生成 |
-| 专项方法 skill | `ME-*` 方法证据、测试点候选、方法缺口候选 | 测试点生成、待确认治理 |
+| 专项方法 skill | `ME-*` 方法证据、测试点候选、方法缺口候选、按源补读记录 | 测试点生成、待确认治理 |
 | `testpoint-generation` | 测试用例设计输入、场景化测试点、接口测试点、待确认风险点 | 覆盖审查 |
 | `coverage-review` | 门禁结果、专家评分、阻断项和修正建议 | 设计输入和过程报告刷新 |
 

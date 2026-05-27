@@ -89,14 +89,29 @@ test-analysis-agent/
 │   ├── testpoint-generation/
 │   └── coverage-review/
 ├── knowledge/
+│   ├── README.md
+│   ├── projects/
+│   │   └── <project-key>/
+│   │       └── *.md
+│   └── user/
+│       └── *.md
 ├── memory/
 │   ├── README.md
 │   ├── project-memory.md
 │   ├── domains/
 │   │   └── *.md
-│   └── testing-experience-memory.md
+│   ├── testing-experience-memory.md
+│   ├── projects/
+│   │   └── <project-key>/
+│   │       └── *.md
+│   └── user/
+│       └── *.md
 ├── templates/
+│   ├── projects/
+│   └── user/
 ├── quality-gates/
+│   ├── projects/
+│   └── user/
 ├── bin/
 │   ├── lint-testpoint-report.py
 │   ├── lint-testcase-design-input.py
@@ -130,10 +145,10 @@ test-analysis-agent/
 | `CLAUDE.md` | Claude Code 项目规则入口 |
 | `opencode.json` | OpenCode 项目配置，声明 schema 和 skill 权限 |
 | `skills/` | 测试分析方法能力，是手工维护的 skill 唯一事实源 |
-| `knowledge/` | 稳定专家知识、缺陷模式、测试标准、覆盖体系 |
-| `memory/` | 经人工确认的项目上下文、领域事实和测试经验 |
-| `templates/` | 中间产物、设计输入和过程报告格式 |
-| `quality-gates/` | Agent 可读的质量门禁规则 |
+| `knowledge/` | core 稳定专家知识、缺陷模式、测试标准、覆盖体系；`projects/` 和 `user/` 保存本地 overlay |
+| `memory/` | core 项目上下文、领域事实和测试经验；`projects/` 和 `user/` 保存本地 overlay |
+| `templates/` | core 中间产物、设计输入和过程报告格式；project/user 只能补充说明和呈现偏好 |
+| `quality-gates/` | core 质量门禁规则；project/user 只能追加更严格的本地检查 |
 | `bin/` | 可机械执行的结构 lint、语义启发式检查、runtime 适配校验和 smoke 回归脚本 |
 | `examples/` | 回归样例需求和输出 |
 | `outputs/` | 基于项目根目录保存的运行产物、测试用例设计输入和过程分析报告 |
@@ -188,11 +203,11 @@ bin = 对报告结构和非用例化约束做机械校验
 
 | 层 | 放什么 | 不放什么 | 典型文件 |
 |---|---|---|---|
-| Knowledge | 通用测试理论、分析维度、框架术语、测试点标准、缺陷模式、方法路由矩阵、覆盖分类、专家评分标准 | 项目事实、临时偏好、单次运行结果、未确认业务规则 | `knowledge/test-analysis-methodology.md`、`knowledge/domain-glossary.md`、`knowledge/testpoint-standard.md` |
+| Knowledge | 通用测试理论、分析维度、框架术语、测试点标准、缺陷模式、方法路由矩阵、覆盖分类、专家评分标准、project/user 测试知识补充 | 项目事实、临时偏好、单次运行结果、未确认业务规则 | `knowledge/test-analysis-methodology.md`、`knowledge/domain-glossary.md`、`knowledge/testpoint-standard.md`、`knowledge/projects/<project-key>/**/*.md`、`knowledge/user/**/*.md` |
 | Skills | 触发条件、输入、分析步骤、输出格式引用、质量检查顺序 | 长篇理论定义、通用缺陷清单、级别定义、项目事实 | `skills/testing-method-router/SKILL.md`、`skills/testpoint-generation/SKILL.md` |
-| Memory | 经人工确认的项目事实、项目专属术语、业务域约定、输出偏好、项目历史缺陷、项目反馈教训 | 通用测试理论、框架术语、通用缺陷模式、方法步骤、未确认假设 | `memory/project-memory.md`、`memory/domains/*.md`、`memory/testing-experience-memory.md` |
-| Templates | Markdown 结构、字段占位、最小示例和产物布局 | 标准枚举的独立定义、项目事实、执行流程 | `templates/testcase-design-input-template.md`、`templates/final-report-template.md` |
-| Quality Gates | 通过/失败条件、字段校验、结构校验和风险校验 | 新测试理论、新业务规则、另一套标准定义 | `quality-gates/output-schema-check.md`、`quality-gates/method-application-check.md` |
+| Memory | 经人工确认的项目事实、项目专属术语、业务域约定、输出偏好、项目历史缺陷、项目反馈教训、个人本地偏好 | 通用测试理论、框架术语、通用缺陷模式、方法步骤、未确认假设 | `memory/project-memory.md`、`memory/domains/*.md`、`memory/testing-experience-memory.md`、`memory/projects/<project-key>/**/*.md`、`memory/user/**/*.md` |
+| Templates | Markdown 结构、字段占位、最小示例和产物布局，project/user 补充呈现偏好 | 标准枚举的独立定义、项目事实、执行流程、破坏核心契约的模板覆盖 | `templates/testcase-design-input-template.md`、`templates/final-report-template.md`、`templates/projects/<project-key>/**/*.md`、`templates/user/**/*.md` |
+| Quality Gates | 通过/失败条件、字段校验、结构校验和风险校验，project/user 附加检查 | 新测试理论、新业务规则、另一套标准定义、放宽 core 门禁 | `quality-gates/output-schema-check.md`、`quality-gates/method-application-check.md`、`quality-gates/projects/<project-key>/**/*.md` |
 | bin | 可机械执行的结构、语义和回归检查 | 不可解释的专家判断、项目事实、运行流程编排 | `bin/lint-testpoint-report.py`、`bin/semantic-testpoint-check.py` |
 
 详细规则见 `docs/knowledge-skill-memory-boundaries.md`。
@@ -341,7 +356,17 @@ memory/
 ├── project-memory.md
 ├── domains/
 │   └── *.md
-└── testing-experience-memory.md
+├── testing-experience-memory.md
+├── projects/
+│   └── <project-key>/
+│       ├── project-memory.md
+│       ├── testing-experience-memory.md
+│       ├── output-preferences.md
+│       └── domains/
+│           └── *.md
+└── user/
+    ├── preferences.md
+    └── testing-habits.md
 ```
 
 | 文件 | 作用 | 更新方式 |
@@ -350,6 +375,8 @@ memory/
 | `project-memory.md` | 保存项目全局事实、全局约束、输出偏好和项目专属术语覆盖 | 用户确认后人工追加 |
 | `domains/*.md` | 保存用户自定义业务域的术语、角色权限、接口/数据约定和设计约束 | 用户确认后人工追加；新增分片自动扫描，无需登记索引 |
 | `testing-experience-memory.md` | 保存项目历史缺陷、项目风险模式、评审反馈和团队测试习惯 | 用户确认后人工追加 |
+| `projects/<project-key>/**/*.md` | 保存按项目隔离的事实、业务域分片、历史经验和输出偏好 | 用户确认后人工追加；确定 `project-key` 后自动扫描；默认不提交 Git |
+| `user/**/*.md` | 保存个人输出偏好、检查习惯和本地记忆 | 用户确认后人工追加；默认不提交 Git |
 
 运行时上下文包写入 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`，不放在 `memory/` 目录中。
 
@@ -360,6 +387,10 @@ flowchart TD
   Project["project-memory.md\n全局事实 / 输出偏好"] --> Select["memory-context-builder\n筛选相关记忆"]
   Domains["domains/*.md\n业务域术语 / 约定 / 约束"] --> Select
   Experience["testing-experience-memory.md\n历史缺陷 / 风险模式 / 反馈教训"] --> Select
+  ProjectMemory["projects/<project-key>/**/*.md\n项目化 memory"] --> Select
+  ProjectKnowledge["knowledge/projects/<project-key>/**/*.md\n项目化 knowledge 补充"] --> Select
+  UserOverlay["*/user/**/*.md\n个人偏好 / 本地检查补充"] --> Select
+  ProjectOverlay["templates/quality-gates projects\n项目模板与附加门禁"] --> Select
   Requirement["当前需求文档\n标题 / 模块 / 关键词 / 业务对象"] --> Select
   Select --> Pack["${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md\n本次记忆上下文包"]
   Pack --> Analysis["需求分析 / 方法路由 / 测试点生成"]
@@ -368,6 +399,7 @@ flowchart TD
   Confirm -- "确认项目事实/输出偏好" --> Project
   Confirm -- "确认业务域事实" --> Domains
   Confirm -- "确认测试经验" --> Experience
+  Confirm -- "确认项目化事实/经验" --> ProjectMemory
   Confirm -- "未确认" --> NoWrite["不写入长期 memory"]
 ```
 
@@ -375,13 +407,26 @@ flowchart TD
 
 1. 运行开始时，先读取 `project-memory.md` 的全局内容。
 2. 自动扫描 `domains/*.md`，跳过 `README.md`，根据需求标题、模块、角色、业务对象、状态、接口、关键词和分片自身元信息选择相关分片。
-3. 同时检索 `testing-experience-memory.md` 中与本次需求相关的项目经验。
-4. 只摘取与本次需求直接相关的内容，生成 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`。
-5. 需求分析、方法路由、测试点生成和覆盖审查只读取当前 run 的 `context-pack.md`，避免长期 memory 全量注入。
-6. 过程分析报告输出“建议沉淀的 Memory 更新”，说明建议写入哪个长期文件或业务域分片、依据是什么。
-7. 只有用户明确确认后，才把建议追加到 `project-memory.md`、`domains/*.md` 或 `testing-experience-memory.md`。
+3. 根据用户显式参数、需求 frontmatter 或唯一匹配的项目目录确定 `project-key`；无法唯一确定时，不读取所有项目目录正文，并登记待确认问题。
+4. 如果已确定 `project-key`，扫描 `memory/projects/<project-key>/**/*.md`、`knowledge/projects/<project-key>/**/*.md`、`templates/projects/<project-key>/**/*.md` 和 `quality-gates/projects/<project-key>/**/*.md`，只摘取与当前需求直接相关的项目化片段。
+5. 扫描 `memory/user/**/*.md`、`knowledge/user/**/*.md`、`templates/user/**/*.md` 和 `quality-gates/user/**/*.md`，只摘取与当前需求直接相关的个人偏好或本地检查补充。
+6. 同时检索 `testing-experience-memory.md` 和项目化测试经验中与本次需求相关的经验。
+7. 只摘取与本次需求直接相关的内容，生成 `${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md`。
+8. 需求分析、方法路由、测试点生成和覆盖审查默认读取当前 run 的 `context-pack.md`；如果上下文不足，可以按 context pack 记录的来源文件或当前需求明确指向的 project/user 文件进行受控补读，避免长期 memory、项目化 knowledge 和 user 补充全量注入。
+9. 过程分析报告输出“建议沉淀的 Memory 更新”，说明建议写入哪个长期文件、业务域分片、项目化 memory 文件或 user 本地文件、依据是什么。
+10. 只有用户明确确认后，才把建议追加到 `project-memory.md`、`domains/*.md`、`testing-experience-memory.md`、`projects/<project-key>/**/*.md` 或 `user/**/*.md`。
 
-### 10.5 写入原则
+### 10.5 渐进式披露
+
+project/user 层可能包含大文件，例如测试设计因子库。框架必须按渐进式披露使用这些文件：
+
+1. `memory-context-builder` 先读取目录名、文件名、README、frontmatter 和 Markdown 标题结构，形成 source map。
+2. `context-pack.md` 只注入与当前需求直接相关的少量片段，并记录未注入但可能相关的来源文件和建议补读范围。
+3. 后续 skill 如果发现 context pack 不足，可以读取对应来源文件的相关章节、关键词或表格片段。
+4. 补读结果直接进入该 skill 的方法证据、风险备注或过程报告，不要求刷新 context pack。
+5. 超过 50KB 的 project/user Markdown 不要求提供 `index.md`，但不得整文件注入 context pack 或过程报告。
+
+### 10.6 写入原则
 
 - 有证据：必须来自需求文档、用户明确反馈、评审结论或真实缺陷复盘。
 - 可复用：能影响后续需求分析，而不是只对当前报告有用。
@@ -532,6 +577,10 @@ flowchart TD
 | `test-oracle-heuristics.md` | 测试判定依据启发 |
 | `expert-review-rubric.md` | 专家评分标准 |
 | `domain-glossary.md` | 框架与分析术语 |
+| `projects/<project-key>/**/*.md` | 项目化测试知识补充，例如风险画像、覆盖策略、术语映射、路由说明和测试 oracle 补充 |
+| `user/**/*.md` | 个人测试启发、检查清单和本地关注点 |
+
+project/user knowledge 由 `memory-context-builder` 按需扫描，并通过 `process/context-pack.md` 传递给后续阶段。它只能补充测试策略和关注点，不得覆盖根目录 knowledge 的核心标准和质量门禁。
 
 ### 13.3 Templates
 
@@ -608,7 +657,7 @@ ${PROJECT_ROOT}/outputs/runs/<run-id>/process/context-pack.md
 
 ### 14.1 类型、方法和级别来源
 
-设计输入中的 `场景测试类型`、`大类/子类` 和 `接口测试类型` 以 `knowledge/basic-test-types.md` 为准；测试分析与测试设计边界、分析维度和主交付件落点以 `knowledge/test-analysis-methodology.md` 为准；场景、场景测试条件、测试点和测试用例边界以 `knowledge/test-scenario-point-case-boundary.md` 为准。内部分析使用的测试点类型、测试方法枚举、粒度要求、非用例化约束和 `Level 0` 到 `Level 4` 的级别定义，以 `knowledge/testpoint-standard.md` 为准。
+设计输入中的 `场景测试类型`、`大类/子类` 和 `接口测试类型` 以 `knowledge/basic-test-types.md` 为准；测试分析与测试设计边界、分析维度和主交付件落点以 `knowledge/test-analysis-methodology.md` 为准；场景、场景测试条件、测试点和测试用例边界以 `knowledge/test-scenario-point-case-boundary.md` 为准。内部分析使用的测试点类型、测试方法枚举、粒度要求、非用例化约束和 `Level 0` 到 `Level 4` 的级别定义，以 `knowledge/testpoint-standard.md` 为准。`knowledge/projects/<project-key>/**/*.md` 和 `knowledge/user/**/*.md` 只能作为风险画像、覆盖策略、术语映射、路由说明、个人关注点或 oracle 补充，不改变上述核心来源。
 
 ## 15. 验收标准
 
